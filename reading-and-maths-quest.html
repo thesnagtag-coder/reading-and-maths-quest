@@ -1,0 +1,2016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Sound Studio</title>
+<style>
+  :root{
+    --bg:#FFF8F0;
+    --card:#FFFFFF;
+    --text:#3D2C4E;
+    --text-soft:#7A6C8C;
+    --pink:#FF6FA5;
+    --lilac:#B79CED;
+    --mint:#3FCBA0;
+    --sun:#FFB020;
+    --border:#EFE3F5;
+    --shadow:0 6px 0 rgba(61,44,78,0.08);
+  }
+  [data-theme="dark"]{
+    --bg:#241A33;
+    --card:#332545;
+    --text:#F5EEFB;
+    --text-soft:#C6B7DA;
+    --pink:#FF8FBB;
+    --lilac:#C7B4F5;
+    --mint:#5FE0B8;
+    --sun:#FFC94D;
+    --border:#453360;
+    --shadow:0 6px 0 rgba(0,0,0,0.25);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Baloo 2','Nunito',system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    transition:background .3s,color .3s;
+  }
+  .wrap{max-width:520px;margin:0 auto;padding:20px 18px 60px;}
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+  .brand{font-size:22px;font-weight:800;letter-spacing:.3px;}
+  .brand span{color:var(--pink);}
+  .icon-btn{
+    background:var(--card);border:2px solid var(--border);border-radius:14px;
+    width:42px;height:42px;font-size:18px;cursor:pointer;box-shadow:var(--shadow);
+  }
+  .badge-row{display:flex;gap:8px;align-items:center;}
+  .mini-badge{background:var(--card);border:2px solid var(--border);border-radius:14px;padding:8px 10px;font-weight:800;font-size:13px;box-shadow:var(--shadow);display:none;}
+  .screen{display:none;}
+  .screen.active{display:block;}
+  .card{
+    background:var(--card);border:2px solid var(--border);border-radius:22px;
+    padding:22px;box-shadow:var(--shadow);
+  }
+  h2{margin:0 0 6px;font-size:20px;}
+  p.sub{color:var(--text-soft);margin:0 0 16px;font-size:14px;}
+  .row{display:flex;gap:10px;flex-wrap:wrap;}
+  .swatch{
+    width:44px;height:44px;border-radius:50%;cursor:pointer;border:3px solid transparent;
+  }
+  .swatch.sel{border-color:var(--text);}
+  .companion-pick{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;
+  }
+  .comp-opt{
+    background:var(--bg);border:2px solid var(--border);border-radius:16px;
+    padding:10px 4px;text-align:center;cursor:pointer;font-size:30px;
+  }
+  .comp-opt.sel{border-color:var(--pink);background:rgba(255,111,165,.12);}
+  .comp-opt .lbl{display:block;font-size:11px;color:var(--text-soft);margin-top:2px;font-weight:700;}
+  .btn{
+    width:100%;padding:14px;border:none;border-radius:16px;font-size:16px;font-weight:800;
+    background:var(--pink);color:#fff;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,0.15);
+    font-family:inherit;
+  }
+  .btn:active{transform:translateY(2px);box-shadow:none;}
+  .btn.secondary{background:var(--lilac);}
+  .btn.ghost{background:transparent;color:var(--text);border:2px solid var(--border);box-shadow:none;}
+  .stage{
+    position:relative;background:var(--bg);border:2px dashed var(--border);border-radius:20px;
+    padding:20px;text-align:center;margin-bottom:16px;min-height:170px;
+  }
+  .companion-svg{width:110px;height:110px;}
+  .stats{display:flex;gap:10px;margin-bottom:16px;}
+  .stat{
+    flex:1;background:var(--bg);border-radius:14px;padding:10px;text-align:center;
+    border:2px solid var(--border);
+  }
+  .stat b{display:block;font-size:20px;}
+  .stat span{font-size:11px;color:var(--text-soft);font-weight:700;}
+  .levelmap{display:flex;flex-direction:column;gap:12px;}
+  .level-node{
+    display:flex;align-items:center;gap:14px;background:var(--card);
+    border:2px solid var(--border);border-radius:18px;padding:14px;cursor:pointer;
+    box-shadow:var(--shadow);
+  }
+  .level-node.locked{opacity:.45;cursor:not-allowed;}
+  .level-node .badge{
+    width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:20px;font-weight:800;color:#fff;flex-shrink:0;
+  }
+  .level-node .info b{display:block;font-size:15px;}
+  .level-node .info span{font-size:12px;color:var(--text-soft);}
+  .clue{font-size:64px;margin-bottom:6px;}
+  .hearbtn{
+    background:var(--sun);color:#5A3E00;border:none;border-radius:12px;padding:8px 14px;
+    font-weight:800;font-size:13px;cursor:pointer;margin-bottom:14px;font-family:inherit;
+  }
+  .slots{display:flex;gap:6px;justify-content:center;margin:10px 0;flex-wrap:wrap;}
+  .slot{
+    width:44px;height:52px;border:2px solid var(--border);border-radius:10px;
+    background:var(--card);display:flex;align-items:center;justify-content:center;
+    font-size:20px;font-weight:800;
+  }
+  .slot.filled{border-color:var(--mint);}
+  .tiles{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px;}
+  .tile{
+    padding:10px 14px;border-radius:12px;background:var(--lilac);color:#fff;
+    font-weight:800;font-size:18px;cursor:pointer;border:none;font-family:inherit;
+  }
+  .tile:disabled{opacity:.25;cursor:default;}
+  .mc-options{display:flex;flex-direction:column;gap:10px;margin-top:12px;}
+  .mc-opt{
+    padding:14px;border-radius:14px;background:var(--card);border:2px solid var(--border);
+    font-size:20px;font-weight:800;cursor:pointer;text-align:center;
+  }
+  .mc-opt.eliminated{opacity:.3;pointer-events:none;text-decoration:line-through;}
+  .needs-listen{opacity:.3;pointer-events:none;transition:opacity .3s;}
+  .listen-note{text-align:center;font-weight:800;font-size:13px;color:var(--sun);margin:0 0 10px;}
+  .hearbtn.pulse{animation:pulseBtn 1.1s ease-in-out infinite;}
+  @keyframes pulseBtn{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+  .feedback{min-height:24px;font-weight:800;font-size:14px;margin-top:10px;}
+  .feedback.good{color:var(--mint);}
+  .feedback.retry{color:var(--pink);}
+  .progressbar{height:8px;background:var(--bg);border-radius:6px;overflow:hidden;margin-bottom:14px;}
+  .progressbar div{height:100%;background:var(--mint);transition:width .3s;}
+  .sticker-row{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:12px;}
+  .sticker{font-size:22px;}
+  .backlink{background:none;border:none;color:var(--text-soft);font-weight:700;cursor:pointer;font-family:inherit;font-size:13px;margin-bottom:10px;padding:0;}
+
+  .island-scene{background:linear-gradient(180deg,var(--bg) 0%,var(--card) 100%);border:2px dashed var(--border);border-radius:20px;padding:16px;margin-bottom:16px;}
+  #islandArt{border-radius:14px;overflow:hidden;background:#fff;}
+  #islandArt .piece{fill:#EDE3F7;stroke:#C7B3E3;stroke-width:2;stroke-dasharray:5 4;stroke-linejoin:round;transition:fill .5s, stroke .5s;}
+  #islandArt .piece.revealed{fill:var(--c);stroke:var(--cs);stroke-dasharray:none;}
+  #islandArt .piece#piece-clouds{stroke-dasharray:3 3;}
+  #islandArt .piece#piece-rainbow path{stroke:#E4D8F0;}
+  #islandArt .piece#piece-rainbow.revealed path:nth-child(1){stroke:#FF6FA5;}
+  #islandArt .piece#piece-rainbow.revealed path:nth-child(2){stroke:#FFB020;}
+  #islandArt .piece#piece-rainbow.revealed path:nth-child(3){stroke:#3FCBA0;}
+  #islandArt .piece#piece-rainbow.revealed path:nth-child(4){stroke:#5FA8FF;}
+  #islandArt .piece#piece-bird path{stroke:#E4D8F0;}
+  #islandArt .piece#piece-bird.revealed path{stroke:var(--cs);}
+  #islandArt #palmTrunk{fill:#F5EFFA;stroke:#D9CBEE;stroke-width:1.5;stroke-dasharray:3 2;}
+  #islandArt .piece#piece-palm.revealed #palmTrunk{fill:var(--trunk);stroke:var(--trunks);stroke-dasharray:none;}
+  .island-collection{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;justify-content:center;}
+  .island-collection span{background:var(--bg);border:1.5px solid var(--border);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--text-soft);}
+  .island-empty{color:var(--text-soft);font-size:13px;text-align:center;padding:10px 0;}
+  .quest-card{background:linear-gradient(120deg,rgba(255,176,32,.15),rgba(255,111,165,.12));border:2px solid var(--sun);border-radius:18px;padding:14px 16px;margin-bottom:16px;}
+  .quest-card b{display:block;font-size:14px;margin-bottom:4px;}
+  .quest-card .qbar{height:8px;background:var(--card);border-radius:6px;overflow:hidden;margin-top:8px;}
+  .quest-card .qbar div{height:100%;background:var(--sun);transition:width .3s;}
+  .quest-done{color:var(--mint);font-weight:800;font-size:13px;margin-top:6px;}
+  .zone-card{display:flex;align-items:center;gap:14px;background:var(--card);border:2px solid var(--border);border-radius:20px;padding:16px;margin-bottom:12px;cursor:pointer;box-shadow:var(--shadow);}
+  .zone-card.locked{opacity:.45;cursor:not-allowed;}
+  .zone-icon{width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;color:#fff;flex-shrink:0;}
+  .zone-info b{display:block;font-size:16px;}
+  .zone-info span{font-size:12px;color:var(--text-soft);}
+  .zone-progress{margin-top:6px;font-size:12px;font-weight:800;color:var(--mint);}
+  .week-row{display:flex;gap:6px;justify-content:space-between;margin-top:10px;}
+  .week-day{flex:1;text-align:center;}
+  .week-day .dot{width:22px;height:22px;border-radius:50%;margin:0 auto 4px;background:var(--bg);border:2px solid var(--border);}
+  .week-day .dot.played{background:var(--mint);border-color:var(--mint);}
+  .week-day span{font-size:10px;color:var(--text-soft);font-weight:700;}
+  .canvas-wrap{display:flex;justify-content:center;background:var(--bg);border:2px dashed var(--border);border-radius:20px;padding:10px;}
+  #drawCanvas{width:100%;max-width:340px;aspect-ratio:1/1;border-radius:14px;background:#fff;touch-action:none;box-shadow:var(--shadow);}
+  .brush-btn{padding:10px 14px;border-radius:14px;border:2px solid var(--border);background:var(--card);cursor:pointer;font-weight:800;font-family:inherit;flex:1;}
+  .brush-btn.sel{border-color:var(--pink);background:rgba(255,111,165,.12);}
+  .gallery-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .gallery-grid img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px;border:2px solid var(--border);}
+  .lesson-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .lesson-tile{
+    position:relative;background:var(--card);border:2px solid var(--border);border-radius:16px;
+    padding:12px 6px 10px;text-align:center;cursor:pointer;box-shadow:var(--shadow);
+  }
+  .lesson-tile.locked{opacity:.4;cursor:not-allowed;}
+  .lesson-tile.done{border-color:var(--mint);background:rgba(63,203,160,.1);}
+  .lesson-tile .tile-ico{
+    width:36px;height:36px;border-radius:50%;margin:0 auto 6px;display:flex;align-items:center;
+    justify-content:center;font-size:16px;color:#fff;
+  }
+  .lesson-tile .tile-name{font-size:11px;font-weight:800;line-height:1.2;}
+  .lesson-tile .tile-check{position:absolute;top:4px;right:6px;font-size:13px;}
+  .goal-row{display:flex;align-items:center;gap:12px;background:var(--bg);border:2px solid var(--border);border-radius:16px;padding:12px;margin-bottom:10px;}
+  .goal-row.unlocked{border-color:var(--sun);background:rgba(255,176,32,.14);}
+  .goal-icon{font-size:28px;flex-shrink:0;}
+  .goal-info{flex:1;}
+  .goal-info b{display:block;font-size:14px;}
+  .goal-info span{font-size:12px;color:var(--text-soft);font-weight:700;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand" id="brandLabel">Sound <span>Studio</span></div>
+    <div class="badge-row">
+      <div id="coinBadge" class="mini-badge"></div>
+      <div id="starBadge" class="mini-badge"></div>
+      <div id="streakBadge" class="mini-badge"></div>
+      <button class="icon-btn" id="themeToggle" title="Toggle light/dark">🌙</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-setup">
+    <div class="card">
+      <h2>Make your pet</h2>
+      <p class="sub">Pick a friend, a colour, and give it a name. It starts as an egg and hatches and grows as you play. You can change this anytime. The game will be named after you.</p>
+      <div class="stage" style="margin-bottom:16px;">
+        <div id="setupPreview"></div>
+      </div>
+      <p class="sub" id="setupStageCaption" style="text-align:center;margin-top:-10px;"></p>
+      <div class="companion-pick" id="compPick"></div>
+      <p class="sub" style="margin-bottom:8px;">Colour</p>
+      <div class="row" id="colorPick" style="margin-bottom:20px;"></div>
+      <p class="sub" style="margin-bottom:8px;">Name</p>
+      <input type="text" id="nameInput" maxlength="16" placeholder="e.g. Sparkle" style="width:100%;padding:12px;border-radius:12px;border:2px solid var(--border);background:var(--bg);color:var(--text);font-family:inherit;font-size:15px;margin-bottom:20px;">
+      <button class="btn" id="startBtn">Start playing</button>
+      <p class="sub" style="margin:14px 0 0;text-align:center;">Everything stays on this device. Nothing is saved online or shared with anyone.</p>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-island">
+    <div class="card" style="margin-bottom:16px;text-align:center;">
+      <div class="stage">
+        <div id="islandCompanionHolder" style="display:flex;justify-content:center;"></div>
+      </div>
+      <p style="text-align:center;font-weight:800;font-size:16px;margin:0 0 2px;" id="islandNameLine"></p>
+      <p class="sub" id="islandStageCaption" style="text-align:center;margin-bottom:10px;"></p>
+      <div class="stats">
+        <div class="stat"><b id="islandStars">0</b><span>STARS</span></div>
+        <div class="stat"><b id="islandCoins">0</b><span>COINS</span></div>
+        <div class="stat"><b id="islandStreak">0</b><span>DAY STREAK</span></div>
+      </div>
+      <div class="row" style="gap:8px;">
+        <button class="btn ghost" id="editCompanionBtn" style="flex:1;">Change my pet</button>
+        <button class="btn ghost" id="openDashboard" style="flex:1;">My progress</button>
+      </div>
+    </div>
+
+    <div class="card" id="questCard" style="display:none;margin-bottom:16px;"></div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <h2>My lessons</h2>
+      <p class="sub">Tap any lesson to jump straight in. Green means done.</p>
+      <div class="lesson-grid" id="lessonGrid"></div>
+    </div>
+
+    <div class="card" id="reviewCard" style="margin-bottom:16px;">
+      <h2>Review Corner</h2>
+      <p class="sub">Practice things you already learned, any time, as many times as you like. It never affects your lesson progress.</p>
+      <div class="row" style="gap:8px;" id="reviewButtons"></div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <h2>My island</h2>
+      <p class="sub" id="islandArtCaption">Every level you finish colours in a bit more of your island.</p>
+      <div class="island-scene">
+        <svg id="islandArt" viewBox="0 0 400 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;">
+          <defs>
+            <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#EAF4FF"/>
+              <stop offset="1" stop-color="#FDF6FF"/>
+            </linearGradient>
+          </defs>
+          <rect x="0" y="0" width="400" height="230" fill="url(#skyGrad)"/>
+
+          <g class="piece" id="piece-clouds" style="--c:#FFFFFF;--cs:#E3D9F0;">
+            <ellipse cx="70" cy="38" rx="26" ry="12"/>
+            <ellipse cx="95" cy="32" rx="20" ry="10"/>
+            <ellipse cx="320" cy="30" rx="22" ry="10"/>
+            <ellipse cx="345" cy="36" rx="16" ry="9"/>
+          </g>
+
+          <g class="piece" id="piece-sun" style="--c:#FFC94D;--cs:#F2A400;">
+            <circle cx="345" cy="46" r="24"/>
+          </g>
+
+          <g class="piece" id="piece-rainbow" style="--c:none;--cs:none;">
+            <path d="M40 150 A80 80 0 0 1 200 150" fill="none" stroke="#FF6FA5" stroke-width="7"/>
+            <path d="M52 150 A68 68 0 0 1 188 150" fill="none" stroke="#FFB020" stroke-width="7"/>
+            <path d="M64 150 A56 56 0 0 1 176 150" fill="none" stroke="#3FCBA0" stroke-width="7"/>
+            <path d="M76 150 A44 44 0 0 1 164 150" fill="none" stroke="#5FA8FF" stroke-width="7"/>
+          </g>
+
+          <g class="piece" id="piece-bird" style="--c:#7A6C8C;--cs:#7A6C8C;">
+            <path d="M240 60 q8 -8 16 0 q8 -8 16 0" fill="none" stroke="var(--cs)" stroke-width="3" stroke-linecap="round"/>
+            <path d="M270 78 q7 -7 14 0 q7 -7 14 0" fill="none" stroke="var(--cs)" stroke-width="3" stroke-linecap="round"/>
+          </g>
+
+          <!-- sea -->
+          <path d="M0 175 Q100 160 200 175 T400 175 V230 H0 Z" fill="#BFE3FF"/>
+          <!-- sand -->
+          <path d="M0 190 Q120 172 220 188 T400 182 V230 H0 Z" fill="#FCEBC5"/>
+
+          <g class="piece" id="piece-hillback" style="--c:#BFE7C9;--cs:#8FCBA1;">
+            <ellipse cx="150" cy="188" rx="150" ry="55"/>
+          </g>
+          <g class="piece" id="piece-hillfront" style="--c:#9FDCB2;--cs:#6FBE88;">
+            <ellipse cx="230" cy="200" rx="130" ry="42"/>
+          </g>
+
+          <g class="piece" id="piece-palm" style="--c:#7BB661;--cs:#5C934A;--trunk:#B98552;--trunks:#8C6438;">
+            <rect id="palmTrunk" x="66" y="140" width="8" height="46" rx="3"/>
+            <path d="M70 142 q-28 -6 -38 8 q20 4 38 -2 Z"/>
+            <path d="M70 142 q28 -10 40 2 q-22 8 -40 2 Z"/>
+            <path d="M70 142 q-6 -22 10 -30 q8 16 -4 32 Z"/>
+            <path d="M70 142 q12 -20 30 -14 q-6 18 -26 18 Z"/>
+          </g>
+
+          <g class="piece" id="piece-flowers" style="--c:#FF6FA5;--cs:#E24F86;">
+            <circle cx="120" cy="196" r="5"/>
+            <circle cx="132" cy="200" r="5"/>
+            <circle cx="144" cy="195" r="5"/>
+            <circle cx="128" cy="206" r="5"/>
+          </g>
+
+          <g class="piece" id="piece-path" style="--c:#F1DDA8;--cs:#D8BE7C;">
+            <path d="M200 210 Q215 195 205 178 Q198 165 210 150" fill="none" stroke-width="10" stroke-linecap="round"/>
+          </g>
+
+          <g class="piece" id="piece-shells" style="--c:#FFFFFF;--cs:#E7C9E0;">
+            <circle cx="330" cy="200" r="4"/>
+            <circle cx="345" cy="206" r="4"/>
+            <circle cx="360" cy="198" r="4"/>
+          </g>
+
+          <g id="houseGroup"></g>
+        </svg>
+        <p class="sub" id="houseCaption" style="margin:8px 0 0;text-align:center;"></p>
+        <div id="islandCollection" class="island-collection"></div>
+      </div>
+    </div>
+
+    <div id="zoneList"></div>
+    <div id="artCard"></div>
+  </div>
+
+  <div class="screen" id="screen-draw">
+    <button class="backlink" id="backFromDraw">&larr; back to island</button>
+    <div class="card">
+      <h2>Art Studio</h2>
+      <p class="sub" id="artPrompt">Draw anything you like! Save it to keep it in your gallery.</p>
+      <div class="canvas-wrap">
+        <canvas id="drawCanvas" width="320" height="320"></canvas>
+      </div>
+      <p class="sub" style="margin:14px 0 8px;">Colour</p>
+      <div class="row" id="drawColors" style="margin-bottom:14px;"></div>
+      <p class="sub" style="margin-bottom:8px;">Brush</p>
+      <div class="row" style="margin-bottom:16px;gap:8px;">
+        <button class="brush-btn" data-size="4">Thin</button>
+        <button class="brush-btn" data-size="9">Medium</button>
+        <button class="brush-btn" data-size="18">Thick</button>
+      </div>
+      <div class="row" style="gap:8px;">
+        <button class="btn ghost" id="clearCanvasBtn" style="flex:1;">Clear</button>
+        <button class="btn" id="saveDrawingBtn" style="flex:1;">Save to gallery</button>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <h2>My gallery</h2>
+      <p class="sub" id="galleryNote"></p>
+      <div class="gallery-grid" id="galleryGrid"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-map">
+    <button class="backlink" id="backToIsland">&larr; back to island</button>
+    <div class="card" style="margin-bottom:16px;text-align:center;">
+      <h2 id="zoneMapTitle">Zone</h2>
+      <p class="sub" id="zoneMapSub"></p>
+    </div>
+    <div class="levelmap" id="levelMap"></div>
+  </div>
+
+  <div class="screen" id="screen-dashboard">
+    <button class="backlink" id="backFromDash">&larr; back to island</button>
+    <div class="card" style="margin-bottom:16px;">
+      <h2>My progress</h2>
+      <p class="sub" id="streakLine"></p>
+      <div class="week-row" id="weekRow"></div>
+      <div class="stats" style="margin-top:16px;">
+        <div class="stat"><b id="dashStars">0</b><span>STARS</span></div>
+        <div class="stat"><b id="dashCoins">0</b><span>COINS</span></div>
+        <div class="stat"><b id="dashWords">0</b><span>WORDS/SUMS</span></div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:16px;">
+      <h2>Big goals</h2>
+      <p class="sub">Special goals to work towards.</p>
+      <div id="bigGoalsList"></div>
+    </div>
+    <div class="card" style="margin-bottom:16px;" id="dashZones"></div>
+    <div class="card" style="margin-bottom:16px;">
+      <h2>Sticker collection</h2>
+      <p class="sub" id="dashStickerNote"></p>
+      <div class="sticker-row" id="dashStickers" style="font-size:30px;"></div>
+    </div>
+    <div class="card">
+      <p class="sub" style="margin-bottom:10px;">For a grown-up: erase everything and start this game over from scratch.</p>
+      <button class="btn ghost" id="resetGameBtn" style="border-color:var(--pink);color:var(--pink);">Reset progress and start over</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-level">
+    <button class="backlink" id="backToMap">&larr; back to zone</button>
+    <div class="card">
+      <div class="progressbar"><div id="levelProgress" style="width:0%"></div></div>
+      <div id="playArea"></div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-summary">
+    <div class="card" style="text-align:center;">
+      <div style="font-size:56px;" id="summaryEmoji">🎉</div>
+      <h2 id="summaryTitle">Level complete!</h2>
+      <p class="sub" id="summarySub"></p>
+      <button class="btn" id="summaryContinue">Back to island</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const COMPANIONS = [
+  {id:'fox',emoji:'🦊',label:'Fox'},
+  {id:'cat',emoji:'🐱',label:'Cat'},
+  {id:'bunny',emoji:'🐰',label:'Bunny'},
+  {id:'dragon',emoji:'🐲',label:'Dragon'}
+];
+const COLORS = ['#FF6FA5','#B79CED','#3FCBA0','#FFB020','#5FA8FF','#FF8A65'];
+
+const READING_LEVELS = [
+  {id:1,name:'Short sounds',desc:'cat, dog, sun...',color:'#FF6FA5',type:'tiles',
+   words:[
+     {w:'cat',clue:'🐱',tiles:['c','a','t']},
+     {w:'dog',clue:'🐶',tiles:['d','o','g']},
+     {w:'sun',clue:'☀️',tiles:['s','u','n']},
+     {w:'pig',clue:'🐷',tiles:['p','i','g']},
+     {w:'hat',clue:'🎩',tiles:['h','a','t']},
+     {w:'bed',clue:'🛏️',tiles:['b','e','d']},
+     {w:'cup',clue:'☕',tiles:['c','u','p']},
+     {w:'fan',clue:'🌀',tiles:['f','a','n']},
+     {w:'net',clue:'🥅',tiles:['n','e','t']},
+     {w:'log',clue:'🪵',tiles:['l','o','g']},
+     {w:'jam',clue:'🍓',tiles:['j','a','m']},
+     {w:'web',clue:'🕸️',tiles:['w','e','b']},
+     {w:'box',clue:'📦',tiles:['b','o','x']},
+     {w:'bug',clue:'🐛',tiles:['b','u','g']},
+     {w:'hen',clue:'🐔',tiles:['h','e','n']},
+     {w:'map',clue:'🗺️',tiles:['m','a','p']},
+     {w:'six',clue:'6️⃣',tiles:['s','i','x']},
+     {w:'top',clue:'🌀',tiles:['t','o','p']},
+     {w:'wig',clue:'👱',tiles:['w','i','g']},
+     {w:'jet',clue:'✈️',tiles:['j','e','t']},
+     {w:'mud',clue:'🟤',tiles:['m','u','d']},
+     {w:'zip',clue:'🤐',tiles:['z','i','p']}
+   ]},
+  {id:2,name:'Two letter teams',desc:'ship, chin, duck...',color:'#B79CED',type:'tiles',
+   words:[
+     {w:'ship',clue:'🚢',tiles:['sh','i','p']},
+     {w:'chin',clue:'🙂',tiles:['ch','i','n']},
+     {w:'duck',clue:'🦆',tiles:['d','u','ck']},
+     {w:'wish',clue:'⭐',tiles:['w','i','sh']},
+     {w:'chop',clue:'🪓',tiles:['ch','o','p']},
+     {w:'sock',clue:'🧦',tiles:['s','o','ck']},
+     {w:'shop',clue:'🛍️',tiles:['sh','o','p']},
+     {w:'chip',clue:'🍟',tiles:['ch','i','p']},
+     {w:'fish',clue:'🐟',tiles:['f','i','sh']},
+     {w:'much',clue:'🙌',tiles:['m','u','ch']},
+     {w:'rock',clue:'🪨',tiles:['r','o','ck']},
+     {w:'thin',clue:'📏',tiles:['th','i','n']},
+     {w:'shell',clue:'🐚',tiles:['sh','e','ll']},
+     {w:'when',clue:'⏰',tiles:['wh','e','n']},
+     {w:'that',clue:'👉',tiles:['th','a','t']},
+     {w:'chest',clue:'📦',tiles:['ch','e','s','t']},
+     {w:'wheel',clue:'☸️',tiles:['wh','ee','l']},
+     {w:'moth',clue:'🦋',tiles:['m','o','th']},
+     {w:'bath',clue:'🛁',tiles:['b','a','th']},
+     {w:'chick',clue:'🐥',tiles:['ch','i','ck']}
+   ]},
+  {id:3,name:'Blends',desc:'frog, plan, stop...',color:'#3FCBA0',type:'tiles',
+   words:[
+     {w:'frog',clue:'🐸',tiles:['f','r','o','g']},
+     {w:'plan',clue:'📝',tiles:['p','l','a','n']},
+     {w:'stop',clue:'🛑',tiles:['s','t','o','p']},
+     {w:'clap',clue:'👏',tiles:['c','l','a','p']},
+     {w:'drum',clue:'🥁',tiles:['d','r','u','m']},
+     {w:'flag',clue:'🚩',tiles:['f','l','a','g']},
+     {w:'swim',clue:'🏊',tiles:['s','w','i','m']},
+     {w:'trap',clue:'🪤',tiles:['t','r','a','p']},
+     {w:'crab',clue:'🦀',tiles:['c','r','a','b']},
+     {w:'plum',clue:'🍑',tiles:['p','l','u','m']},
+     {w:'star',clue:'⭐',tiles:['s','t','a','r']},
+     {w:'grin',clue:'😁',tiles:['g','r','i','n']},
+     {w:'spot',clue:'🐆',tiles:['s','p','o','t']},
+     {w:'brush',clue:'🖌️',tiles:['b','r','u','sh']},
+     {w:'glass',clue:'🥛',tiles:['g','l','a','ss']},
+     {w:'black',clue:'⚫',tiles:['b','l','a','ck']},
+     {w:'truck',clue:'🚚',tiles:['t','r','u','ck']},
+     {w:'skip',clue:'🤸',tiles:['s','k','i','p']}
+   ]},
+  {id:4,name:'Vowel teams',desc:'rain, tree, boat...',color:'#FFB020',type:'tiles',
+   words:[
+     {w:'rain',clue:'🌧️',tiles:['r','ai','n']},
+     {w:'tree',clue:'🌳',tiles:['t','r','ee']},
+     {w:'boat',clue:'⛵',tiles:['b','oa','t']},
+     {w:'snail',clue:'🐌',tiles:['s','n','ai','l']},
+     {w:'coin',clue:'🪙',tiles:['c','oi','n']},
+     {w:'moon',clue:'🌙',tiles:['m','oo','n']},
+     {w:'cake',clue:'🎂',tiles:['c','a','k','e']},
+     {w:'road',clue:'🛣️',tiles:['r','oa','d']},
+     {w:'leaf',clue:'🍃',tiles:['l','ea','f']},
+     {w:'bee',clue:'🐝',tiles:['b','ee']},
+     {w:'toy',clue:'🧸',tiles:['t','oy']},
+     {w:'pie',clue:'🥧',tiles:['p','ie']},
+     {w:'goat',clue:'🐐',tiles:['g','oa','t']},
+     {w:'seed',clue:'🌱',tiles:['s','ee','d']},
+     {w:'train',clue:'🚂',tiles:['t','r','ai','n']},
+     {w:'cloud',clue:'☁️',tiles:['c','l','ou','d']},
+     {w:'sheep',clue:'🐑',tiles:['sh','ee','p']},
+     {w:'soap',clue:'🧼',tiles:['s','oa','p']}
+   ]},
+  {id:5,name:'Tricky words',desc:'said, they, could...',color:'#5FA8FF',type:'choice',
+   words:[
+     {w:'said',options:['said','siad','sead']},
+     {w:'they',options:['they','thay','thye']},
+     {w:'was',options:['was','wsa','wos']},
+     {w:'come',options:['come','comm','cume']},
+     {w:'could',options:['could','coud','culd']},
+     {w:'from',options:['from','fom','forn']},
+     {w:'have',options:['have','hvae','haev']},
+     {w:'what',options:['what','waht','wnat']},
+     {w:'were',options:['were','wear','wehr']},
+     {w:'there',options:['there','their','thear']},
+     {w:'little',options:['little','littel','litle']},
+     {w:'people',options:['people','peopel','peple']},
+     {w:'because',options:['because','becuase','becaus']},
+     {w:'water',options:['water','watter','wator']},
+     {w:'friend',options:['friend','freind','frend']},
+     {w:'again',options:['again','agian','agen']},
+     {w:'every',options:['every','evrey','evry']}
+   ]},
+  {id:6,name:'Word builders',desc:'jumping, unhappy, sunflower...',color:'#5FE0B8',type:'choice',
+   words:[
+     {w:'jumping',clue:'🦘',options:['jumping','jumpping','jumpingg']},
+     {w:'played',clue:'⚽',options:['played','playd','plaied']},
+     {w:'unhappy',clue:'😢',options:['unhappy','inhappy','unhapy']},
+     {w:'replay',clue:'🔁',options:['replay','riplay','replai']},
+     {w:'sunflower',clue:'🌻',options:['sunflower','sunflour','sunfower']},
+     {w:'toothbrush',clue:'🪥',options:['toothbrush','toothbrash','tothbrush']},
+     {w:'cats',clue:'🐈🐈',options:['cats','catss','cates']},
+     {w:'dishes',clue:'🍽️',options:['dishes','dishs','disshes']},
+     {w:'boxes',clue:'📦📦',options:['boxes','boxs','boxses']},
+     {w:'don\'t',clue:'🙅',options:['don\'t','dont','do\'nt']},
+     {w:'it\'s',clue:'☝️',options:['it\'s','its','i\'ts']},
+     {w:'running',clue:'🏃',options:['running','runing','runnning']},
+     {w:'biggest',clue:'📏',options:['biggest','bigest','biggist']},
+     {w:'happily',clue:'😊',options:['happily','happyly','hapily']},
+     {w:'dogs',clue:'🐕🐕',options:['dogs','dogss','doges']},
+     {w:'wishes',clue:'🌟',options:['wishes','wishs','wisshes']}
+   ]},
+  {id:7,name:'Silent e words',desc:'cake, bike, home, cute...',color:'#5FA8FF',type:'choice',
+   words:[
+     {w:'bike',clue:'🚲',options:['bike','bik','byke']},
+     {w:'home',clue:'🏠',options:['home','hom','hoem']},
+     {w:'cute',clue:'🐰',options:['cute','cut','kute']},
+     {w:'tape',clue:'📼',options:['tape','tap','taip']},
+     {w:'hope',clue:'🤞',options:['hope','hop','houp']},
+     {w:'cube',clue:'🧊',options:['cube','cub','kube']},
+     {w:'rope',clue:'🪢',options:['rope','rop','roap']},
+     {w:'wave',clue:'👋',options:['wave','wav','waive']},
+     {w:'five',clue:'5️⃣',options:['five','fiv','fyve']},
+     {w:'note',clue:'🎵',options:['note','not','noat']},
+     {w:'kite',clue:'🪁',options:['kite','kit','kyte']},
+     {w:'globe',clue:'🌍',options:['globe','glob','gloab']}
+   ]},
+  {id:8,name:'R-controlled vowels',desc:'car, bird, corn, hurt...',color:'#B79CED',type:'choice',
+   words:[
+     {w:'car',clue:'🚗',options:['car','care','cer']},
+     {w:'star',clue:'⭐',options:['star','stare','stor']},
+     {w:'her',clue:'👧',options:['her','har','hur']},
+     {w:'bird',clue:'🐦',options:['bird','berd','burd']},
+     {w:'girl',clue:'👧',options:['girl','gril','gerl']},
+     {w:'corn',clue:'🌽',options:['corn','carn','curn']},
+     {w:'fork',clue:'🍴',options:['fork','fark','furk']},
+     {w:'hurt',clue:'🤕',options:['hurt','hert','hort']},
+     {w:'turtle',clue:'🐢',options:['turtle','tertle','tortle']},
+     {w:'farm',clue:'🚜',options:['farm','ferm','form']},
+     {w:'party',clue:'🎉',options:['party','perty','porty']}
+   ]},
+  {id:9,name:'Bigger words',desc:'butterfly, elephant, rainbow...',color:'#FF8A65',type:'choice',
+   words:[
+     {w:'butterfly',clue:'🦋',options:['butterfly','buterfly','butterflie']},
+     {w:'elephant',clue:'🐘',options:['elephant','elefant','elephent']},
+     {w:'rainbow',clue:'🌈',options:['rainbow','rainbo','ranbow']},
+     {w:'dinosaur',clue:'🦕',options:['dinosaur','dinasaur','dinosour']},
+     {w:'umbrella',clue:'☂️',options:['umbrella','umbrela','umbrellla']},
+     {w:'alphabet',clue:'🔤',options:['alphabet','alfabet','alphabit']},
+     {w:'breakfast',clue:'🍳',options:['breakfast','brekfast','breackfast']},
+     {w:'afternoon',clue:'🌇',options:['afternoon','afternoun','afternon']},
+     {w:'basketball',clue:'🏀',options:['basketball','baskettball','basketbal']},
+     {w:'adventure',clue:'🗺️',options:['adventure','adventuer','advencher']}
+   ]},
+  // Levels 10-19 below are built directly from the user's real 40-page phonics
+  // deck (Canva), which follows the standard "Letters and Sounds" UK synthetic
+  // phonics sequence (Phase 2-5 graphemes, diphthongs, quadgraphs, blends,
+  // "glued"/welded sounds) plus Dolch sight words and Jolly Phonics tricky
+  // words - both fixed, standard, well-documented word lists. Added 2026-08-16.
+  {id:10,name:'Diphthongs',desc:'saw, oil, cow, boy...',color:'#E07A5F',type:'tiles',
+   words:[
+     {w:'saw',clue:'🪚',tiles:['s','aw']},
+     {w:'claw',clue:'🐾',tiles:['c','l','aw']},
+     {w:'haul',clue:'🚛',tiles:['h','au','l']},
+     {w:'oil',clue:'🛢️',tiles:['oi','l']},
+     {w:'point',clue:'👉',tiles:['p','oi','n','t']},
+     {w:'boy',clue:'👦',tiles:['b','oy']},
+     {w:'cow',clue:'🐄',tiles:['c','ow']},
+     {w:'brown',clue:'🟤',tiles:['b','r','ow','n']},
+     {w:'owl',clue:'🦉',tiles:['ow','l']},
+     {w:'loud',clue:'🔊',tiles:['l','ou','d']},
+     {w:'mouse',clue:'🐭',tiles:['m','ou','se']},
+     {w:'shout',clue:'📢',tiles:['sh','ou','t']}
+   ]},
+  {id:11,name:'More vowel teams',desc:'doe, fruit, blue, zoo...',color:'#E07A5F',type:'tiles',
+   words:[
+     {w:'doe',clue:'🦌',tiles:['d','oe']},
+     {w:'fruit',clue:'🍉',tiles:['f','r','ui','t']},
+     {w:'suit',clue:'👔',tiles:['s','ui','t']},
+     {w:'juice',clue:'🧃',tiles:['j','ui','ce']},
+     {w:'blue',clue:'🔵',tiles:['b','l','ue']},
+     {w:'glue',clue:'🧴',tiles:['g','l','ue']},
+     {w:'true',clue:'✅',tiles:['t','r','ue']},
+     {w:'zoo',clue:'🦓',tiles:['z','oo']},
+     {w:'food',clue:'🍔',tiles:['f','oo','d']},
+     {w:'pool',clue:'🏊',tiles:['p','oo','l']}
+   ]},
+  {id:12,name:'Tricky endings',desc:'caught, thought, eight, station...',color:'#9D5C63',type:'tiles',
+   words:[
+     {w:'caught',clue:'🤲',tiles:['c','augh','t']},
+     {w:'taught',clue:'👩‍🏫',tiles:['t','augh','t']},
+     {w:'daughter',clue:'👧',tiles:['d','augh','t','er']},
+     {w:'though',clue:'🤔',tiles:['th','ough']},
+     {w:'thought',clue:'💭',tiles:['th','ough','t']},
+     {w:'through',clue:'➡️',tiles:['th','r','ough']},
+     {w:'eight',clue:'8️⃣',tiles:['eigh','t']},
+     {w:'weight',clue:'⚖️',tiles:['w','eigh','t']},
+     {w:'station',clue:'🚉',tiles:['s','t','a','tion']},
+     {w:'nation',clue:'🏳️',tiles:['n','a','tion']},
+     {w:'curious',clue:'🧐',tiles:['c','ur','ious']}
+   ]},
+  {id:13,name:'More blends',desc:'splash, squid, bridge, street...',color:'#9D5C63',type:'tiles',
+   words:[
+     {w:'splash',clue:'💦',tiles:['spl','a','sh']},
+     {w:'squid',clue:'🦑',tiles:['squ','i','d']},
+     {w:'shrimp',clue:'🦐',tiles:['shr','i','mp']},
+     {w:'three',clue:'3️⃣',tiles:['thr','ee']},
+     {w:'watch',clue:'⌚',tiles:['w','a','tch']},
+     {w:'bridge',clue:'🌉',tiles:['b','r','i','dge']},
+     {w:'lunch',clue:'🍱',tiles:['l','u','nch']},
+     {w:'scream',clue:'😱',tiles:['scr','ea','m']},
+     {w:'street',clue:'🛣️',tiles:['str','ee','t']},
+     {w:'spring',clue:'🌸',tiles:['spr','i','ng']},
+     {w:'wrist',clue:'💪',tiles:['wr','i','st']},
+     {w:'skate',clue:'⛸️',tiles:['sk','a','te']}
+   ]},
+  {id:14,name:'Glued sounds',desc:'bang, king, bank, honk...',color:'#5FA8FF',type:'tiles',
+   words:[
+     {w:'bang',clue:'💥',tiles:['b','ang']},
+     {w:'king',clue:'👑',tiles:['k','ing']},
+     {w:'song',clue:'🎵',tiles:['s','ong']},
+     {w:'stung',clue:'🐝',tiles:['st','ung']},
+     {w:'bank',clue:'🏦',tiles:['b','ank']},
+     {w:'pink',clue:'💗',tiles:['p','ink']},
+     {w:'honk',clue:'📯',tiles:['h','onk']},
+     {w:'skunk',clue:'🦨',tiles:['sk','unk']},
+     {w:'rang',clue:'🔔',tiles:['r','ang']},
+     {w:'ring',clue:'💍',tiles:['r','ing']},
+     {w:'long',clue:'📏',tiles:['l','ong']},
+     {w:'sunk',clue:'⚓',tiles:['s','unk']}
+   ]},
+  {id:15,name:'Sight words: set 1',desc:'away, funny, pretty, four...',color:'#5FA8FF',type:'choice',
+   words:[
+     {w:'away',options:['away','awey','awai']},
+     {w:'funny',options:['funny','funy','funney']},
+     {w:'yellow',options:['yellow','yelow','yellew']},
+     {w:'jump',options:['jump','jumb','gump']},
+     {w:'pretty',options:['pretty','prety','prettey']},
+     {w:'into',options:['into','intoo','inta']},
+     {w:'four',options:['four','for','fourr']},
+     {w:'soon',options:['soon','soone','sonn']},
+     {w:'ride',options:['ride','ryde','riede']},
+     {w:'want',options:['want','wont','whant']},
+     {w:'well',options:['well','wel','whell']},
+     {w:'black',options:['black','blak','blakc']}
+   ]},
+  {id:16,name:'Sight words: set 2',desc:'again, every, know, once...',color:'#B79CED',type:'choice',
+   words:[
+     {w:'again',options:['again','agian','agen']},
+     {w:'every',options:['every','evrey','evry']},
+     {w:'know',options:['know','no','knowe']},
+     {w:'once',options:['once','wonce','onse']},
+     {w:'over',options:['over','ovar','ober']},
+     {w:'some',options:['some','sum','soem']},
+     {w:'think',options:['think','fink','thnik']},
+     {w:'were',options:['were','wear','wehr']},
+     {w:'always',options:['always','allways','alwais']},
+     {w:'because',options:['because','becuase','becaus']},
+     {w:'first',options:['first','frist','furst']},
+     {w:'right',options:['right','rite','rihgt']}
+   ]},
+  {id:17,name:'Sight words: set 3',desc:'better, carry, clean, warm...',color:'#B79CED',type:'choice',
+   words:[
+     {w:'better',options:['better','beter','bettar']},
+     {w:'carry',options:['carry','cary','carrey']},
+     {w:'clean',options:['clean','cleen','clene']},
+     {w:'draw',options:['draw','drore','drawe']},
+     {w:'grow',options:['grow','groe','growe']},
+     {w:'hold',options:['hold','hoald','holde']},
+     {w:'kind',options:['kind','kynd','kinde']},
+     {w:'laugh',options:['laugh','laff','lauph']},
+     {w:'myself',options:['myself','myselve','mysef']},
+     {w:'together',options:['together','togeather','togther']},
+     {w:'warm',options:['warm','worm','warmm']},
+     {w:'start',options:['start','stort','sturt']}
+   ]},
+  {id:18,name:'Jolly Phonics tricky words',desc:'he, she, we, are, do...',color:'#2FB08C',type:'choice',
+   words:[
+     {w:'he',options:['he','hee','he\'']},
+     {w:'she',options:['she','shee','shea']},
+     {w:'we',options:['we','wee','wea']},
+     {w:'me',options:['me','mee','mea']},
+     {w:'be',options:['be','bee','bea']},
+     {w:'my',options:['my','mi','mye']},
+     {w:'her',options:['her','har','herr']},
+     {w:'all',options:['all','al','aul']},
+     {w:'are',options:['are','ar','arr']},
+     {w:'so',options:['so','soe','sow']},
+     {w:'do',options:['do','doe','du']},
+     {w:'of',options:['of','ov','uv']}
+   ]},
+  {id:19,name:'Long vowel practice',desc:'name, time, bone, tune...',color:'#2FB08C',type:'tiles',
+   words:[
+     {w:'name',clue:'🏷️',tiles:['n','a','m','e']},
+     {w:'time',clue:'⏰',tiles:['t','i','m','e']},
+     {w:'bone',clue:'🦴',tiles:['b','o','n','e']},
+     {w:'tune',clue:'🎶',tiles:['t','u','n','e']},
+     {w:'shape',clue:'⬟',tiles:['sh','a','p','e']},
+     {w:'smile',clue:'😄',tiles:['sm','i','l','e']},
+     {w:'stone',clue:'🪨',tiles:['st','o','n','e']},
+     {w:'flute',clue:'🎷',tiles:['fl','u','t','e']},
+     {w:'grape',clue:'🍇',tiles:['gr','a','p','e']},
+     {w:'slide',clue:'🛝',tiles:['sl','i','d','e']},
+     {w:'close',clue:'🚪',tiles:['cl','o','se']},
+     {w:'plate',clue:'🍽️',tiles:['pl','a','te']}
+   ]}
+];
+
+// Maths Meadow: deliberately kept to very basic, sequence-agnostic skills
+// (counting, addition, subtraction, shapes, comparing, skip counting, doubles)
+// rather than a full curriculum track, since a verified Montessori/CAPS
+// scope-and-sequence for this school has not been confirmed - see handoff.
+//
+// Content is procedurally generated fresh every time a level is played
+// (see startLevel()), using random values within each level's range. This
+// means she never sees the exact same set of sums twice and can't memorise
+// "level 2, question 3 is 9", she has to actually work each one out - and it
+// also means the maths side of the game never runs out of material.
+const COUNT_EMOJI = ['🍎','⭐','🐝','🐠','🍭','🎈','🐞','🌟','🍇','🎀','🦋','🍓','🐧','🍪'];
+
+function shuffleGen(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  return arr;
+}
+function optionsAround(correct, min, max){
+  const opts = new Set([correct]);
+  let guard = 0;
+  while(opts.size < 3 && guard < 40){
+    guard++;
+    const delta = 1 + Math.floor(Math.random()*3);
+    const cand = Math.random() < 0.5 ? correct - delta : correct + delta;
+    if(cand >= min && cand <= max) opts.add(cand);
+  }
+  let filler = min;
+  while(opts.size < 3 && filler <= max){ opts.add(filler); filler++; }
+  return shuffleGen(Array.from(opts).map(String));
+}
+function genCounting(maxN, count){
+  const items = [];
+  for(let i=0;i<count;i++){
+    const n = 1 + Math.floor(Math.random()*maxN);
+    const emoji = COUNT_EMOJI[Math.floor(Math.random()*COUNT_EMOJI.length)];
+    items.push({w:String(n), clue: emoji.repeat(n), options: optionsAround(n, 1, maxN+2)});
+  }
+  return items;
+}
+// fixedB, when set, keeps one addend constant (Kumon-style small step: master
+// "+1" completely before "+2", before mixed addition) instead of jumping
+// straight to fully mixed sums.
+function genAddition(maxSum, count, fixedB){
+  const items = [];
+  for(let i=0;i<count;i++){
+    let a, b;
+    if(fixedB){
+      b = fixedB;
+      a = 1 + Math.floor(Math.random()*Math.max(1, maxSum-fixedB));
+    } else {
+      a = 1 + Math.floor(Math.random()*(maxSum-1));
+      b = 1 + Math.floor(Math.random()*(maxSum-a));
+    }
+    const sum = a+b;
+    items.push({w:String(sum), clue: a+' + '+b+' =', options: optionsAround(sum, 0, maxSum+3)});
+  }
+  return items;
+}
+function genSubtraction(maxN, count, fixedB){
+  const items = [];
+  for(let i=0;i<count;i++){
+    let a, b;
+    if(fixedB){
+      b = fixedB;
+      a = fixedB + Math.floor(Math.random()*Math.max(1, maxN-fixedB));
+    } else {
+      a = 2 + Math.floor(Math.random()*(maxN-1));
+      b = Math.floor(Math.random()*(a+1));
+    }
+    const diff = a-b;
+    items.push({w:String(diff), clue: a+' - '+b+' =', options: optionsAround(diff, 0, maxN)});
+  }
+  return items;
+}
+function genCompare(maxN, count){
+  const items = [];
+  for(let i=0;i<count;i++){
+    const nums = new Set();
+    while(nums.size < 3) nums.add(1 + Math.floor(Math.random()*maxN));
+    const arr = Array.from(nums);
+    const findBiggest = Math.random() < 0.5;
+    const target = findBiggest ? Math.max(...arr) : Math.min(...arr);
+    items.push({
+      w:String(target),
+      clue:'Which is '+(findBiggest?'biggest':'smallest')+': '+arr.join(', ')+'?',
+      options: shuffleGen(arr.map(String))
+    });
+  }
+  return items;
+}
+function genSkip(step, count){
+  const items = [];
+  for(let i=0;i<count;i++){
+    const start = step * (1 + Math.floor(Math.random()*6));
+    const seq = [start, start+step, start+step*2];
+    const next = start + step*3;
+    items.push({w:String(next), clue: seq.join(', ')+', ___?', options: optionsAround(next, 0, next+step*2)});
+  }
+  return items;
+}
+function genDoubles(maxN, count){
+  const items = [];
+  for(let i=0;i<count;i++){
+    const n = 1 + Math.floor(Math.random()*maxN);
+    items.push({w:String(n*2), clue:'Double '+n+' =', options: optionsAround(n*2, 0, maxN*2+3)});
+  }
+  return items;
+}
+
+const SHAPES_BANK = [
+  {w:'circle',clue:'⚪'},{w:'square',clue:'🟪'},{w:'triangle',clue:'🔺'},{w:'star',clue:'⭐'},
+  {w:'rectangle',clue:'▭'},{w:'oval',clue:'🥚'},{w:'diamond',clue:'🔶'},{w:'heart',clue:'💛'},
+  {w:'pentagon',clue:'⬠'},{w:'hexagon',clue:'⬡'}
+];
+function genShapes(count){
+  const shuffled = shuffleGen([...SHAPES_BANK]);
+  return shuffled.slice(0, count).map(s=>{
+    const distractors = shuffleGen(SHAPES_BANK.filter(x=>x.w!==s.w)).slice(0,2).map(x=>x.w);
+    return {w:s.w, clue:s.clue, options: shuffleGen([s.w, ...distractors])};
+  });
+}
+
+// Kumon-style review: mixes fresh problems from levels she's already
+// mastered, so old skills stay sharp instead of fading once she moves on.
+// Regenerated fresh every time (like the other maths levels), never runs out.
+function genReviewMaths(){
+  const done = MATH_LEVELS.filter(l => l.id !== 'review' && state.zoneProgress.maths && state.zoneProgress.maths[l.id]);
+  if(done.length === 0) return genCounting(10, 8);
+  const items = [];
+  const picks = shuffleGen([...done]).slice(0, Math.min(4, done.length));
+  picks.forEach(lvl=>{ items.push(...lvl.generate().slice(0, 3)); });
+  return shuffleGen(items).slice(0, 10);
+}
+// Same idea for Reading Cove - pull words from already-finished levels and
+// quiz them again as multiple choice, using other real words from the same
+// levels as the wrong options (never invented misspellings).
+function genReviewReading(){
+  const done = READING_LEVELS.filter(l => state.zoneProgress.reading && state.zoneProgress.reading[l.id]);
+  if(done.length === 0) return [];
+  const pool = [];
+  done.forEach(lvl=>{
+    lvl.words.forEach(w=>{
+      const word = w.w || (w.tiles ? w.tiles.join('') : '');
+      if(word) pool.push({w: word, clue: w.clue || '✦'});
+    });
+  });
+  const picks = shuffleGen([...pool]).slice(0, Math.min(10, pool.length));
+  return picks.map(item=>{
+    const decoys = shuffleGen(pool.filter(p=>p.w!==item.w)).slice(0,2).map(p=>p.w);
+    return {w:item.w, clue:item.clue, options: shuffleGen([item.w, ...decoys])};
+  });
+}
+
+const MATH_LEVELS = [
+  {id:1,name:'Counting to 10',desc:'How many are there?',color:'#3FCBA0',type:'choice',
+   generate:()=>genCounting(10,10), words:[]},
+  {id:2,name:'Add 1',desc:'Add 1 to a number',color:'#3FCBA0',type:'choice',
+   generate:()=>genAddition(10,8,1), words:[]},
+  {id:3,name:'Add 2',desc:'Add 2 to a number',color:'#3FCBA0',type:'choice',
+   generate:()=>genAddition(10,8,2), words:[]},
+  {id:4,name:'Add 3',desc:'Add 3 to a number',color:'#3FCBA0',type:'choice',
+   generate:()=>genAddition(10,8,3), words:[]},
+  {id:5,name:'Mixed addition to 10',desc:'Add up to 10',color:'#3FCBA0',type:'choice',
+   generate:()=>genAddition(10,10), words:[]},
+  {id:6,name:'Shapes',desc:'Name the shape',color:'#3FCBA0',type:'choice',
+   generate:()=>genShapes(8), words:[]},
+  {id:7,name:'Take away 1',desc:'Subtract 1 from a number',color:'#2FB08C',type:'choice',
+   generate:()=>genSubtraction(10,8,1), words:[]},
+  {id:8,name:'Take away 2',desc:'Subtract 2 from a number',color:'#2FB08C',type:'choice',
+   generate:()=>genSubtraction(10,8,2), words:[]},
+  {id:9,name:'Mixed subtraction to 10',desc:'Take away up to 10',color:'#2FB08C',type:'choice',
+   generate:()=>genSubtraction(10,10), words:[]},
+  {id:10,name:'Compare numbers',desc:'Which is biggest or smallest?',color:'#2FB08C',type:'choice',
+   generate:()=>genCompare(10,8), words:[]},
+  {id:11,name:'Counting to 20',desc:'How many are there?',color:'#2FA0FF',type:'choice',
+   generate:()=>genCounting(20,10), words:[]},
+  {id:12,name:'Addition to 20',desc:'Add up to 20',color:'#2FA0FF',type:'choice',
+   generate:()=>genAddition(20,10), words:[]},
+  {id:13,name:'Subtraction to 20',desc:'Take away up to 20',color:'#2FA0FF',type:'choice',
+   generate:()=>genSubtraction(20,10), words:[]},
+  {id:14,name:'Doubles',desc:'Double the number',color:'#B79CED',type:'choice',
+   generate:()=>genDoubles(10,10), words:[]},
+  {id:15,name:'Skip counting by 2s',desc:'2, 4, 6... what comes next?',color:'#B79CED',type:'choice',
+   generate:()=>genSkip(2,8), words:[]},
+  {id:16,name:'Skip counting by 5s',desc:'5, 10, 15... what comes next?',color:'#B79CED',type:'choice',
+   generate:()=>genSkip(5,8), words:[]},
+  {id:17,name:'Skip counting by 10s',desc:'10, 20, 30... what comes next?',color:'#B79CED',type:'choice',
+   generate:()=>genSkip(10,8), words:[]}
+];
+
+const ZONES = [
+  {id:'reading',name:'Reading Cove',tagline:'Sounds, blends and tricky words',color:'#FF6FA5',icon:'📖',levels:READING_LEVELS},
+  {id:'maths',name:'Maths Meadow',tagline:'Counting, adding and shapes',color:'#3FCBA0',icon:'🔢',levels:MATH_LEVELS}
+];
+
+// Plain names, not emoji - these become text badges under the island art, so
+// they never depend on a device's emoji font support (see safeEmoji above).
+const ISLAND_DECOR = ['Palm tree','Sandy path','Sunflowers','Fountain','Beach hut','Rope bridge','Ferris wheel','Pink flamingo','Hibiscus','Rocket slide','Circus tent','Rainbow','Kite','Beach umbrella','Flag post','Carousel','Swan pond','Cactus patch','Water slide','Ocean waves','Lookout tower','Camp tent','Roller coaster','Canoe','Sky swing','Art easel','Teddy bear bench','Yoyo stand','Gift stall','Parrot perch','Volcano hill','Lantern walk','Seashells','Starfish beach'];
+const STICKER_POOL = ['🌸','⭐','🎀','🍄','🦋','🌈','🍭','💎','🌟','🧁','🍩','🍦','🎈','🪅','🎨','🦄','🐬','🍉','🌙','🍓','🍋','🍒','🥝','🍑','🌺','🦩','🍇','🍰','🎊','🧿','🪄','🐚','🌼','🍬'];
+const TOTAL_LEVELS = ZONES.reduce((sum,z)=>sum + z.levels.length, 0);
+
+// Big goals: real-world rewards to work towards, unlocked at level-completion
+// milestones, spread roughly across quarters of the total level count so
+// there's always something not-too-far-off to work towards. Easy to edit any
+// time - just change label/desc/icon/milestone (milestones scale automatically
+// with TOTAL_LEVELS if you keep them as fractions like this).
+const BIG_GOALS = [
+  {milestone:Math.round(TOTAL_LEVELS*0.25), icon:'🍦', label:'Ice cream treat', desc:'pick your favourite flavour'},
+  {milestone:Math.round(TOTAL_LEVELS*0.5), icon:'🏖️', label:'Beach or park walk', desc:'a fun outing together'},
+  {milestone:Math.round(TOTAL_LEVELS*0.75), icon:'👯', label:'Play-date', desc:'with a friend'},
+  {milestone:TOTAL_LEVELS, icon:'🎁', label:'Big surprise', desc:'you get to pick'}
+];
+
+function stickerForLevel(zone, level){
+  let idx = 0;
+  for(const z of ZONES){
+    for(const l of z.levels){
+      if(z.id === zone.id && l.id === level.id) return STICKER_POOL[idx % STICKER_POOL.length];
+      idx++;
+    }
+  }
+  return STICKER_POOL[0];
+}
+
+const defaultState = {
+  theme:'light',
+  companion:'fox',
+  color:'#FF6FA5',
+  stars:0,
+  coins:0,
+  wordsBuilt:0,
+  zoneProgress:null,
+  stickers:[],
+  islandItems:[],
+  streak:0,
+  lastPlayed:null,
+  playedDates:[],
+  streakFreezeWeek:null,
+  streakFreezeUsed:false,
+  dailyQuest:null,
+  drawings:[],
+  name:'',
+  mathLevelsVersion:2,
+  bestTimes:{},
+  reviewStats:{reading:{plays:0}, maths:{plays:0}}
+};
+// Art Studio unlocks on a comprehensive milestone (finishing every level in a
+// whole zone), not just a couple of levels - drawing is the reward for
+// something substantial, not a quick unlock.
+function artUnlocked(){
+  return ZONES.some(z => Object.values(state.zoneProgress[z.id]).every(Boolean));
+}
+function pickArtPrompt(){
+  const doneWords = [];
+  ZONES.forEach(z=>{
+    if(z.id !== 'reading') return;
+    z.levels.forEach(l=>{
+      if(state.zoneProgress[z.id][l.id]){
+        l.words.forEach(w=>{ if(/^[a-z'']+$/i.test(w.w)) doneWords.push(w.w); });
+      }
+    });
+  });
+  if(doneWords.length === 0) return null;
+  return doneWords[Math.floor(Math.random()*doneWords.length)];
+}
+
+let state = loadState();
+let currentZone = null;
+let currentLevel = null;
+let wordIndex = 0;
+let levelCorrect = 0;
+let levelStartTime = 0;
+let slotAnswer = [];
+let currentTiles = [];
+
+function emptyZoneProgress(){
+  const zp = {};
+  ZONES.forEach(z=>{ zp[z.id] = {}; z.levels.forEach(l=>{ zp[z.id][l.id] = false; }); });
+  return zp;
+}
+
+function loadState(){
+  let parsed = {};
+  try{
+    const raw = localStorage.getItem('soundStudioState');
+    if(raw) parsed = JSON.parse(raw);
+  }catch(e){ parsed = {}; }
+  const s = {...defaultState, ...parsed};
+  if(!s.zoneProgress){
+    s.zoneProgress = emptyZoneProgress();
+    if(parsed.levelDone){
+      Object.keys(parsed.levelDone).forEach(k=>{
+        if(s.zoneProgress.reading.hasOwnProperty(k)) s.zoneProgress.reading[k] = parsed.levelDone[k];
+      });
+    }
+  }
+  // Maths Meadow was reordered into smaller Kumon-style steps (e.g. "Add 1"
+  // before "Add 2" before mixed addition), so old level ids no longer point
+  // at the same lesson. Reset only maths progress once, so a level that used
+  // to say "done" doesn't now point at unfinished content. Reading progress,
+  // stickers, stars, coins and streak are untouched.
+  if(s.mathLevelsVersion !== 2){
+    s.zoneProgress.maths = {};
+    s.mathLevelsVersion = 2;
+  }
+  ZONES.forEach(z=>{
+    if(!s.zoneProgress[z.id]) s.zoneProgress[z.id] = {};
+    z.levels.forEach(l=>{ if(!(l.id in s.zoneProgress[z.id])) s.zoneProgress[z.id][l.id] = false; });
+  });
+  if(!Array.isArray(s.playedDates)) s.playedDates = [];
+  if(!Array.isArray(s.islandItems)) s.islandItems = [];
+  // Older saves stored island decorations as emoji; the island is now a
+  // colouring-in scene and decorations are plain text badges instead, so
+  // rebuild the list from the (safe, non-emoji) names.
+  if(s.islandItems.some(i => /[^\x00-\x7F]/.test(i))){
+    const doneCount = ZONES.reduce((sum,z)=>sum + Object.values(s.zoneProgress[z.id]||{}).filter(Boolean).length, 0);
+    s.islandItems = ISLAND_DECOR.slice(0, doneCount);
+  }
+  if(!Array.isArray(s.drawings)) s.drawings = [];
+  return s;
+}
+function saveState(){
+  try{ localStorage.setItem('soundStudioState', JSON.stringify(state)); }catch(e){}
+}
+
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme', state.theme);
+  document.getElementById('themeToggle').textContent = state.theme === 'light' ? '🌙' : '☀️';
+}
+document.getElementById('themeToggle').addEventListener('click', ()=>{
+  state.theme = state.theme === 'light' ? 'dark' : 'light';
+  saveState(); applyTheme();
+});
+
+function applyAccentColor(){
+  document.documentElement.style.setProperty('--pink', state.color);
+}
+
+function renderBrand(){
+  const label = document.getElementById('brandLabel');
+  if(state.name && state.name.trim()){
+    label.innerHTML = state.name.trim() + '\'s <span>Game</span>';
+    document.title = state.name.trim() + '\'s Game';
+  } else {
+    label.innerHTML = 'Sound <span>Studio</span>';
+    document.title = 'Sound Studio';
+  }
+}
+
+function updateTopBadges(){
+  const starEl = document.getElementById('starBadge');
+  const coinEl = document.getElementById('coinBadge');
+  if(state.name){
+    starEl.style.display = 'block';
+    starEl.textContent = '⭐ ' + state.stars;
+    coinEl.style.display = 'block';
+    coinEl.textContent = '🪙 ' + state.coins;
+  } else {
+    starEl.style.display = 'none';
+    coinEl.style.display = 'none';
+  }
+}
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+const STAGE_LABELS = ['Egg','Baby','Growing up','All grown up','Superstar'];
+const STAGE_SCALE = {1:0.6, 2:0.8, 3:0.95, 4:1.08};
+// House stages are drawn as SVG shapes (see houseSVG below) instead of emoji,
+// so they always render the same on every device.
+const HOUSE_STAGE_NAMES = ['Tent', 'Cosy hut', 'Cottage', 'Castle'];
+
+function totalDoneCount(){
+  return ZONES.reduce((sum,z)=>sum + Object.values(state.zoneProgress[z.id]).filter(Boolean).length, 0);
+}
+function petStage(doneCount){
+  if(doneCount <= 0) return 0;
+  if(doneCount <= Math.round(TOTAL_LEVELS*0.15)) return 1;
+  if(doneCount <= Math.round(TOTAL_LEVELS*0.4)) return 2;
+  if(doneCount <= Math.round(TOTAL_LEVELS*0.8)) return 3;
+  return 4;
+}
+function houseStage(doneCount){
+  if(doneCount <= 0) return 0;
+  if(doneCount <= Math.round(TOTAL_LEVELS*0.25)) return 1;
+  if(doneCount <= Math.round(TOTAL_LEVELS*0.6)) return 2;
+  return 3;
+}
+// Draws the house as plain SVG shapes (never emoji) so it always renders,
+// and visibly grows from a little tent into a castle across the 4 stages.
+function houseSVG(stage, color){
+  const roof = color, wall = '#FFFFFF', dark = '#3D2C4E';
+  if(stage === 0){
+    return '<g transform="translate(280,160)">' +
+      '<path d="M-22 40 L0 -18 L22 40 Z" fill="'+roof+'" stroke="'+dark+'" stroke-width="2"/>' +
+      '<path d="M-6 40 L0 20 L6 40 Z" fill="'+dark+'"/>' +
+      '</g>';
+  }
+  if(stage === 1){
+    return '<g transform="translate(276,148)">' +
+      '<rect x="-26" y="14" width="52" height="30" rx="3" fill="'+wall+'" stroke="'+dark+'" stroke-width="2"/>' +
+      '<path d="M-30 16 L0 -14 L30 16 Z" fill="'+roof+'" stroke="'+dark+'" stroke-width="2"/>' +
+      '<rect x="-7" y="26" width="14" height="18" fill="'+dark+'"/>' +
+      '</g>';
+  }
+  if(stage === 2){
+    return '<g transform="translate(272,132)">' +
+      '<rect x="-32" y="26" width="64" height="42" rx="3" fill="'+wall+'" stroke="'+dark+'" stroke-width="2"/>' +
+      '<path d="M-38 28 L0 -8 L38 28 Z" fill="'+roof+'" stroke="'+dark+'" stroke-width="2"/>' +
+      '<rect x="-9" y="42" width="18" height="26" fill="'+dark+'"/>' +
+      '<rect x="10" y="34" width="12" height="12" rx="2" fill="#BFE7F5" stroke="'+dark+'" stroke-width="1.5"/>' +
+      '<rect x="-22" y="34" width="12" height="12" rx="2" fill="#BFE7F5" stroke="'+dark+'" stroke-width="1.5"/>' +
+      '<rect x="16" y="4" width="8" height="18" fill="'+dark+'"/>' +
+      '</g>';
+  }
+  return '<g transform="translate(260,108)">' +
+    '<rect x="-46" y="46" width="92" height="60" rx="3" fill="'+wall+'" stroke="'+dark+'" stroke-width="2"/>' +
+    '<rect x="-58" y="30" width="16" height="30" fill="'+wall+'" stroke="'+dark+'" stroke-width="2"/>' +
+    '<rect x="42" y="30" width="16" height="30" fill="'+wall+'" stroke="'+dark+'" stroke-width="2"/>' +
+    '<path d="M-58 30 l8 -14 l8 14 Z" fill="'+roof+'" stroke="'+dark+'" stroke-width="2"/>' +
+    '<path d="M42 30 l8 -14 l8 14 Z" fill="'+roof+'" stroke="'+dark+'" stroke-width="2"/>' +
+    '<path d="M-52 46 L0 8 L52 46 Z" fill="'+roof+'" stroke="'+dark+'" stroke-width="2"/>' +
+    '<rect x="-10" y="66" width="20" height="40" fill="'+dark+'"/>' +
+    '<rect x="14" y="58" width="14" height="14" rx="2" fill="#BFE7F5" stroke="'+dark+'" stroke-width="1.5"/>' +
+    '<rect x="-28" y="58" width="14" height="14" rx="2" fill="#BFE7F5" stroke="'+dark+'" stroke-width="1.5"/>' +
+    '<path d="M0 8 L0 -14" stroke="'+dark+'" stroke-width="2"/>' +
+    '<path d="M0 -14 L16 -8 L0 -2 Z" fill="'+roof+'" stroke="'+dark+'" stroke-width="1.5"/>' +
+    '</g>';
+}
+// Puzzle pieces reveal in this order as she finishes more levels, like a
+// coloring page slowly filling in - the whole scene is always visible as a
+// soft outline so it never looks empty or broken, even at zero progress.
+const ISLAND_PIECES = ['piece-sun','piece-hillback','piece-hillfront','piece-palm','piece-flowers','piece-path','piece-clouds','piece-rainbow','piece-shells','piece-bird'];
+function renderIslandArt(doneTotal){
+  const pct = TOTAL_LEVELS > 0 ? Math.min(1, doneTotal / TOTAL_LEVELS) : 0;
+  const revealCount = Math.round(pct * ISLAND_PIECES.length);
+  ISLAND_PIECES.forEach((id, i)=>{
+    const el = document.getElementById(id);
+    if(el) el.classList.toggle('revealed', i < revealCount);
+  });
+
+  const hStage = houseStage(doneTotal);
+  document.getElementById('houseGroup').innerHTML = houseSVG(hStage, state.color || '#FF6FA5');
+  document.getElementById('houseCaption').textContent = hStage === 0
+    ? HOUSE_STAGE_NAMES[0] + ' - finish levels to build your home up.'
+    : (hStage === HOUSE_STAGE_NAMES.length - 1 ? HOUSE_STAGE_NAMES[3] + ' - your home is fully built!' : HOUSE_STAGE_NAMES[hStage] + ' - your home is growing too.');
+
+  document.getElementById('islandArtCaption').textContent = doneTotal === 0
+    ? 'Finish your first level to start colouring in your island.'
+    : (pct >= 1 ? 'Your island is complete!' : 'Every level you finish colours in a bit more of your island.');
+
+  const coll = document.getElementById('islandCollection');
+  if(state.islandItems.length === 0){
+    coll.innerHTML = '';
+  } else {
+    coll.innerHTML = state.islandItems.map(name=>'<span>'+name+'</span>').join('');
+  }
+}
+// Unlocks once she's finished a handful of levels in a zone - enough that
+// there's something real to review - and stays available forever after.
+const REVIEW_UNLOCK_COUNT = 3;
+function renderReviewCard(){
+  const wrap = document.getElementById('reviewButtons');
+  wrap.innerHTML = '';
+  ZONES.forEach(zone=>{
+    const doneCount = Object.values(state.zoneProgress[zone.id]).filter(Boolean).length;
+    const unlocked = doneCount >= REVIEW_UNLOCK_COUNT;
+    const btn = document.createElement('button');
+    btn.className = 'btn ghost';
+    btn.style.flex = '1';
+    btn.textContent = unlocked ? 'Review ' + zone.name : zone.name + ' review (finish ' + REVIEW_UNLOCK_COUNT + ' levels first)';
+    btn.disabled = !unlocked;
+    if(!unlocked) btn.style.opacity = '.5';
+    if(unlocked) btn.onclick = () => startReview(zone);
+    wrap.appendChild(btn);
+  });
+}
+function petStageCaption(stage){
+  if(stage === 0) return '🥚 Still an egg, finish a level to hatch it!';
+  const compLabel = (COMPANIONS.find(c=>c.id===state.companion)||{}).label || 'friend';
+  return STAGE_LABELS[stage] + ' ' + compLabel;
+}
+
+function companionSVG(compId, color, accessories, stage){
+  if(stage === undefined) stage = 4;
+  if(stage === 0){
+    return '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">' +
+      '<ellipse cx="60" cy="68" rx="28" ry="36" fill="'+color+'"/>' +
+      '<circle cx="49" cy="56" r="4" fill="#fff" opacity="0.55"/>' +
+      '<circle cx="70" cy="78" r="3" fill="#fff" opacity="0.55"/>' +
+      '<circle cx="66" cy="50" r="2.5" fill="#fff" opacity="0.55"/>' +
+      '<circle cx="52" cy="82" r="2.5" fill="#fff" opacity="0.55"/>' +
+      '</svg>';
+  }
+  const shapes = {
+    fox:'<path d="M60 20 L45 45 L75 45 Z" fill="'+color+'"/><ellipse cx="60" cy="65" rx="34" ry="30" fill="'+color+'"/>',
+    cat:'<path d="M35 35 L45 50 L55 40 Z" fill="'+color+'"/><path d="M85 35 L75 50 L65 40 Z" fill="'+color+'"/><ellipse cx="60" cy="65" rx="32" ry="30" fill="'+color+'"/>',
+    bunny:'<ellipse cx="45" cy="25" rx="8" ry="22" fill="'+color+'"/><ellipse cx="75" cy="25" rx="8" ry="22" fill="'+color+'"/><ellipse cx="60" cy="68" rx="32" ry="30" fill="'+color+'"/>',
+    dragon:'<path d="M40 30 L50 15 L58 30 Z" fill="'+color+'"/><path d="M62 30 L70 15 L80 30 Z" fill="'+color+'"/><ellipse cx="60" cy="68" rx="34" ry="30" fill="'+color+'"/>'
+  };
+  const s = STAGE_SCALE[stage] || 1;
+  let acc = '';
+  const positions = [[30,50],[90,50],[30,90],[90,90],[60,95]];
+  accessories.slice(0,5).forEach((sym,i)=>{
+    const p = positions[i];
+    acc += '<text x="'+p[0]+'" y="'+p[1]+'" font-size="18" text-anchor="middle">'+sym+'</text>';
+  });
+  const crown = stage === 4 ? '<text x="60" y="16" font-size="22" text-anchor="middle">👑</text>' : '';
+  return '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">' +
+    '<g transform="translate(60,60) scale('+s+') translate(-60,-60)">' +
+    (shapes[compId]||shapes.fox) +
+    '<circle cx="50" cy="62" r="4" fill="#3D2C4E"/><circle cx="70" cy="62" r="4" fill="#3D2C4E"/>' +
+    '<path d="M52 78 Q60 84 68 78" stroke="#3D2C4E" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+    '</g>' + crown + acc + '</svg>';
+}
+
+function renderSetup(){
+  const pickEl = document.getElementById('compPick');
+  pickEl.innerHTML = '';
+  COMPANIONS.forEach(c=>{
+    const d = document.createElement('div');
+    d.className = 'comp-opt' + (state.companion===c.id?' sel':'');
+    d.innerHTML = c.emoji + '<span class="lbl">'+c.label+'</span>';
+    d.onclick = ()=>{ state.companion = c.id; saveState(); renderSetup(); };
+    pickEl.appendChild(d);
+  });
+  const colorEl = document.getElementById('colorPick');
+  colorEl.innerHTML = '';
+  COLORS.forEach(col=>{
+    const d = document.createElement('div');
+    d.className = 'swatch' + (state.color===col?' sel':'');
+    d.style.background = col;
+    d.onclick = ()=>{ state.color = col; saveState(); applyAccentColor(); renderSetup(); };
+    colorEl.appendChild(d);
+  });
+  document.getElementById('nameInput').value = state.name || '';
+  const preview = document.getElementById('setupPreview');
+  const stage = petStage(totalDoneCount());
+  preview.innerHTML = companionSVG(state.companion, state.color, state.stickers, stage).replace('<svg','<svg class="companion-svg"');
+  document.getElementById('setupStageCaption').textContent = petStageCaption(stage);
+}
+document.getElementById('nameInput').addEventListener('input', (e)=>{ state.name = e.target.value; });
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  if(!state.name || !state.name.trim()){ state.name = 'Sparkle'; }
+  saveState(); applyAccentColor(); renderBrand(); updateTopBadges();
+  updateStreak(); renderStreakBadge();
+  renderIsland(); show('screen-island');
+});
+document.getElementById('editCompanionBtn').addEventListener('click', ()=>{ renderSetup(); show('screen-setup'); });
+
+function todayStr(){
+  return new Date().toISOString().slice(0,10);
+}
+function isoWeekKey(d){
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = (date.getUTCDay() + 6) % 7;
+  date.setUTCDate(date.getUTCDate() - dayNum + 3);
+  const firstThursday = new Date(Date.UTC(date.getUTCFullYear(),0,4));
+  const week = 1 + Math.round(((date - firstThursday) / 86400000 - 3 + ((firstThursday.getUTCDay()+6)%7)) / 7);
+  return date.getUTCFullYear() + '-W' + week;
+}
+function updateStreak(){
+  const today = todayStr();
+  if(state.lastPlayed === today){ return; }
+  const weekKey = isoWeekKey(new Date());
+  if(state.streakFreezeWeek !== weekKey){ state.streakFreezeWeek = weekKey; state.streakFreezeUsed = false; }
+  const yest = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+  if(state.lastPlayed === yest){
+    state.streak += 1;
+  } else if(state.lastPlayed && !state.streakFreezeUsed){
+    state.streakFreezeUsed = true;
+    if(!state.streak) state.streak = 1;
+  } else {
+    state.streak = 1;
+  }
+  state.lastPlayed = today;
+  if(!state.playedDates.includes(today)) state.playedDates.push(today);
+  if(state.playedDates.length > 60) state.playedDates = state.playedDates.slice(-60);
+  saveState();
+}
+function renderStreakBadge(){
+  const el = document.getElementById('streakBadge');
+  if(state.streak > 0){
+    el.style.display = 'block';
+    el.textContent = '🔥 ' + state.streak + ' day' + (state.streak===1?'':'s');
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+function ensureDailyQuest(){
+  const today = todayStr();
+  if(!state.dailyQuest || state.dailyQuest.date !== today){
+    state.dailyQuest = {date:today, target:5, progress:0, done:false, rewardGiven:false};
+    saveState();
+  }
+}
+
+function renderQuestCard(){
+  ensureDailyQuest();
+  const q = state.dailyQuest;
+  const card = document.getElementById('questCard');
+  card.className = 'quest-card';
+  card.style.display = 'block';
+  const pct = Math.min(100, Math.round((q.progress/q.target)*100));
+  card.innerHTML =
+    '<b>🎯 Today\'s quest</b>' +
+    '<span>Build or solve ' + q.target + ' this session (' + q.progress + '/' + q.target + ')</span>' +
+    '<div class="qbar"><div style="width:'+pct+'%"></div></div>' +
+    (q.done ? '<div class="quest-done">Quest complete! +15 bonus coins 🎉</div>' : '');
+}
+
+function renderIsland(){
+  updateTopBadges();
+  renderQuestCard();
+  const doneTotal = totalDoneCount();
+  const stage = petStage(doneTotal);
+  const holder = document.getElementById('islandCompanionHolder');
+  holder.innerHTML = companionSVG(state.companion, state.color, state.stickers, stage).replace('<svg','<svg class="companion-svg"');
+  document.getElementById('islandNameLine').textContent = (state.name||'Sparkle') + '\'s Island';
+  document.getElementById('islandStageCaption').textContent = petStageCaption(stage);
+  document.getElementById('islandStars').textContent = state.stars;
+  document.getElementById('islandCoins').textContent = state.coins;
+  document.getElementById('islandStreak').textContent = state.streak;
+
+  renderIslandArt(doneTotal);
+  renderReviewCard();
+
+  const lessonGrid = document.getElementById('lessonGrid');
+  lessonGrid.innerHTML = '';
+  ZONES.forEach((zone,zi)=>{
+    const zoneUnlocked = zi===0 || !!state.zoneProgress[ZONES[0].id][ZONES[0].levels[0].id];
+    zone.levels.forEach((lvl,li)=>{
+      const done = state.zoneProgress[zone.id][lvl.id];
+      const levelUnlocked = zoneUnlocked && (li===0 || state.zoneProgress[zone.id][zone.levels[li-1].id]);
+      const tile = document.createElement('div');
+      tile.className = 'lesson-tile' + (done?' done':'') + (levelUnlocked?'':' locked');
+      tile.innerHTML =
+        '<div class="tile-ico" style="background:'+lvl.color+'">'+safeEmoji(zone.icon,'✦')+'</div>' +
+        '<div class="tile-name">'+lvl.name+'</div>' +
+        (done ? '<div class="tile-check">✅</div>' : (levelUnlocked ? '' : '<div class="tile-check">🔒</div>'));
+      if(levelUnlocked){ tile.onclick = ()=>{ currentZone = zone; startLevel(lvl); }; }
+      lessonGrid.appendChild(tile);
+    });
+  });
+
+  const zoneList = document.getElementById('zoneList');
+  zoneList.innerHTML = '';
+  ZONES.forEach((zone,i)=>{
+    const unlocked = i===0 || !!state.zoneProgress[ZONES[0].id][ZONES[0].levels[0].id];
+    const doneCount = Object.values(state.zoneProgress[zone.id]).filter(Boolean).length;
+    const card = document.createElement('div');
+    card.className = 'zone-card' + (unlocked?'':' locked');
+    card.innerHTML =
+      '<div class="zone-icon" style="background:'+zone.color+'">'+safeEmoji(zone.icon,'✦')+'</div>' +
+      '<div class="zone-info"><b>'+zone.name+(unlocked?'':' (locked)')+'</b><span>'+(unlocked?zone.tagline:'Finish a Reading Cove level to unlock')+'</span>' +
+      (unlocked ? '<div class="zone-progress">'+doneCount+'/'+zone.levels.length+' levels done</div>' : '') +
+      '</div>';
+    if(unlocked){ card.onclick = ()=>{ currentZone = zone; renderZoneMap(); show('screen-map'); }; }
+    zoneList.appendChild(card);
+  });
+
+  const artIsUnlocked = artUnlocked();
+  const artCardEl = document.getElementById('artCard');
+  const artCard = document.createElement('div');
+  artCard.className = 'zone-card' + (artIsUnlocked?'':' locked');
+  artCard.innerHTML =
+    '<div class="zone-icon" style="background:#FF8A65">🎨</div>' +
+    '<div class="zone-info"><b>Art Studio'+(artIsUnlocked?'':' (locked)')+'</b><span>' +
+    (artIsUnlocked ? 'Draw anything you like' : 'Finish every level in a whole zone to unlock') + '</span>' +
+    (artIsUnlocked && state.drawings.length ? '<div class="zone-progress">'+state.drawings.length+' drawing'+(state.drawings.length===1?'':'s')+' saved</div>' : '') +
+    '</div>';
+  if(artIsUnlocked){ artCard.onclick = ()=>{ openArtStudio(); }; }
+  artCardEl.innerHTML = '';
+  artCardEl.appendChild(artCard);
+}
+
+function openArtStudio(){
+  const prompt = pickArtPrompt();
+  document.getElementById('artPrompt').textContent = prompt
+    ? '🎨 Try drawing: ' + prompt + '! Or draw anything you like.'
+    : '🎨 Draw anything you like!';
+  renderGallery();
+  show('screen-draw');
+}
+
+document.getElementById('openDashboard').addEventListener('click', ()=>{ renderDashboard(); show('screen-dashboard'); });
+document.getElementById('backFromDash').addEventListener('click', ()=>{ renderIsland(); show('screen-island'); });
+document.getElementById('resetGameBtn').addEventListener('click', ()=>{
+  const sure = window.confirm('Erase all progress and start over from scratch? This cannot be undone.');
+  if(!sure) return;
+  try{ localStorage.removeItem('soundStudioState'); }catch(e){}
+  location.reload();
+});
+document.getElementById('backToIsland').addEventListener('click', ()=>{ renderIsland(); show('screen-island'); });
+document.getElementById('backFromDraw').addEventListener('click', ()=>{ renderIsland(); show('screen-island'); });
+
+// --- Art Studio ---
+let drawCtx = null;
+let drawColor = COLORS[0];
+let brushSize = 9;
+let isDrawing = false;
+let lastPoint = null;
+
+function initCanvas(){
+  const canvas = document.getElementById('drawCanvas');
+  drawCtx = canvas.getContext('2d');
+  drawCtx.fillStyle = '#ffffff';
+  drawCtx.fillRect(0,0,canvas.width,canvas.height);
+  drawCtx.lineCap = 'round';
+  drawCtx.lineJoin = 'round';
+
+  function pointFromEvent(e){
+    const rect = canvas.getBoundingClientRect();
+    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: (cx - rect.left) * (canvas.width / rect.width), y: (cy - rect.top) * (canvas.height / rect.height) };
+  }
+  function start(e){ isDrawing = true; lastPoint = pointFromEvent(e); e.preventDefault(); }
+  function move(e){
+    if(!isDrawing) return;
+    const p = pointFromEvent(e);
+    drawCtx.strokeStyle = drawColor;
+    drawCtx.lineWidth = brushSize;
+    drawCtx.beginPath();
+    drawCtx.moveTo(lastPoint.x, lastPoint.y);
+    drawCtx.lineTo(p.x, p.y);
+    drawCtx.stroke();
+    lastPoint = p;
+    e.preventDefault();
+  }
+  function end(){ isDrawing = false; }
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', end);
+  canvas.addEventListener('touchstart', start, {passive:false});
+  canvas.addEventListener('touchmove', move, {passive:false});
+  canvas.addEventListener('touchend', end);
+}
+
+function renderDrawColors(){
+  const el = document.getElementById('drawColors');
+  el.innerHTML = '';
+  COLORS.concat(['#3D2C4E','#FFFFFF']).forEach(col=>{
+    const d = document.createElement('div');
+    d.className = 'swatch' + (drawColor===col?' sel':'');
+    d.style.background = col;
+    d.style.border = col === '#FFFFFF' ? '2px solid var(--border)' : '3px solid transparent';
+    d.onclick = ()=>{ drawColor = col; renderDrawColors(); };
+    el.appendChild(d);
+  });
+}
+document.querySelectorAll('.brush-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    brushSize = Number(btn.dataset.size);
+    document.querySelectorAll('.brush-btn').forEach(b=>b.classList.remove('sel'));
+    btn.classList.add('sel');
+  });
+});
+document.getElementById('clearCanvasBtn').addEventListener('click', ()=>{
+  const canvas = document.getElementById('drawCanvas');
+  drawCtx.fillStyle = '#ffffff';
+  drawCtx.fillRect(0,0,canvas.width,canvas.height);
+});
+document.getElementById('saveDrawingBtn').addEventListener('click', ()=>{
+  const canvas = document.getElementById('drawCanvas');
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+  state.drawings.unshift(dataUrl);
+  if(state.drawings.length > 12) state.drawings = state.drawings.slice(0,12);
+  state.coins += 3;
+  saveState();
+  updateTopBadges();
+  renderGallery();
+});
+function renderGallery(){
+  const grid = document.getElementById('galleryGrid');
+  const note = document.getElementById('galleryNote');
+  if(state.drawings.length === 0){
+    note.textContent = 'Nothing saved yet. Draw something and tap "Save to gallery"!';
+    grid.innerHTML = '';
+  } else {
+    note.textContent = state.drawings.length + ' drawing' + (state.drawings.length===1?'':'s') + ' saved. Saving one gives +3 coins.';
+    grid.innerHTML = state.drawings.map(d=>'<img src="'+d+'">').join('');
+  }
+}
+
+function renderZoneMap(){
+  document.getElementById('zoneMapTitle').textContent = currentZone.name;
+  document.getElementById('zoneMapSub').textContent = currentZone.tagline;
+  const levelMap = document.getElementById('levelMap');
+  levelMap.innerHTML = '';
+  currentZone.levels.forEach((lvl,i)=>{
+    const prog = state.zoneProgress[currentZone.id];
+    const unlocked = i===0 || prog[currentZone.levels[i-1].id];
+    const node = document.createElement('div');
+    node.className = 'level-node' + (unlocked?'':' locked');
+    node.innerHTML = '<div class="badge" style="background:'+lvl.color+'">' +
+      (prog[lvl.id] ? '★' : (i+1)) + '</div>' +
+      '<div class="info"><b>'+lvl.name+'</b><span>'+lvl.desc+'</span></div>';
+    if(unlocked){ node.onclick = ()=>startLevel(lvl); }
+    levelMap.appendChild(node);
+  });
+}
+
+let isReviewMode = false;
+function startLevel(lvl){
+  if(typeof lvl.generate === 'function'){ lvl.words = lvl.generate(); }
+  currentLevel = lvl;
+  isReviewMode = (lvl.id === 'review');
+  wordIndex = 0;
+  levelCorrect = 0;
+  levelStartTime = Date.now();
+  show('screen-level');
+  renderWord();
+}
+// Review Corner: an optional, unlimited replay of things she's already
+// finished, mixing old words/sums back in so they stay sharp (Kumon-style
+// spaced review) without ever blocking or resetting her real progress.
+function startReview(zone){
+  currentZone = zone;
+  const gen = zone.id === 'reading' ? genReviewReading : genReviewMaths;
+  const words = gen();
+  if(words.length === 0){
+    alert('Finish a few more ' + zone.name + ' levels first, then come back to review them here.');
+    return;
+  }
+  startLevel({id:'review', name:zone.name + ' Review', type:'choice', words:words});
+}
+function finishReview(){
+  if(!state.reviewStats[currentZone.id]) state.reviewStats[currentZone.id] = {plays:0};
+  state.reviewStats[currentZone.id].plays += 1;
+  saveState();
+  document.getElementById('summaryEmoji').textContent = '✦';
+  document.getElementById('summaryTitle').textContent = 'Review complete!';
+  document.getElementById('summarySub').textContent = 'You practiced ' + levelCorrect + ' things you already know. That keeps them easy!';
+  show('screen-summary');
+}
+document.getElementById('backToMap').addEventListener('click', ()=>{ renderZoneMap(); show('screen-map'); });
+
+function speak(text){
+  try{
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.85;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+let hasHeard = false;
+let wordAttemptsWrong = 0;
+let currentItem = null;
+let inputLocked = false;
+
+function renderWord(){
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('levelProgress').style.width = Math.round((wordIndex/currentLevel.words.length)*100)+'%';
+  const play = document.getElementById('playArea');
+  const item = currentLevel.words[wordIndex];
+  currentItem = item;
+  wordAttemptsWrong = 0;
+  inputLocked = false;
+  // Maths answers are numbers/words that ARE the solution (e.g. "5" for
+  // "2 + 3 ="), so unlike Reading Cove, there is nothing safe to play out
+  // loud before she's answered - speaking it would just read out the answer.
+  // Maths questions skip the listen-gate entirely and go straight to solving.
+  const isMaths = currentZone && currentZone.id === 'maths';
+  hasHeard = isMaths;
+
+  if(currentLevel.type === 'tiles'){
+    slotAnswer = new Array(item.tiles.length).fill(null);
+    currentTiles = shuffle([...item.tiles]);
+    play.innerHTML =
+      '<div class="clue">'+safeEmoji(item.clue, '✦')+'</div>' +
+      (isMaths ? '' :
+        '<p class="listen-note" id="listenNote">👂 Tap "Hear it" first, then build the word</p>' +
+        '<button class="hearbtn pulse" id="hearBtn">🔊 Hear the word</button>') +
+      '<div class="slots" id="slots"></div>' +
+      '<div class="tiles'+(isMaths?'':' needs-listen')+'" id="tiles"></div>';
+    if(!isMaths) document.getElementById('hearBtn').onclick = onHearClick;
+    renderSlots();
+    renderTiles();
+  } else {
+    const clueText = safeEmoji(item.clue, '✦') || '✦';
+    const bigClue = clueText.replace(/\s/g,'').length <= 3;
+    play.innerHTML =
+      '<div class="clue" style="'+(bigClue?'':'font-size:32px;')+'">'+clueText+'</div>' +
+      (isMaths ? '' :
+        '<p class="listen-note" id="listenNote">👂 Tap "Hear it" first, then answer</p>' +
+        '<button class="hearbtn pulse" id="hearBtn">🔊 Hear it</button>') +
+      '<div class="mc-options'+(isMaths?'':' needs-listen')+'" id="mcOptions"></div>';
+    if(!isMaths) document.getElementById('hearBtn').onclick = onHearClick;
+    const opts = shuffle([...item.options]);
+    const mc = document.getElementById('mcOptions');
+    mc.innerHTML = '';
+    opts.forEach(opt=>{
+      const b = document.createElement('div');
+      b.className = 'mc-opt';
+      b.textContent = opt;
+      b.onclick = ()=>checkChoice(opt, item.w, b);
+      mc.appendChild(b);
+    });
+  }
+}
+
+function onHearClick(){
+  speak(currentItem.w);
+  if(hasHeard) return;
+  hasHeard = true;
+  const hearBtn = document.getElementById('hearBtn');
+  if(hearBtn) hearBtn.classList.remove('pulse');
+  const note = document.getElementById('listenNote');
+  if(note) note.remove();
+  const tilesEl = document.getElementById('tiles');
+  if(tilesEl) tilesEl.classList.remove('needs-listen');
+  const mcEl = document.getElementById('mcOptions');
+  if(mcEl) mcEl.classList.remove('needs-listen');
+}
+
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  return arr;
+}
+
+// --- Emoji safety net -----------------------------------------------------
+// Some devices/fonts don't have every emoji (especially newer ones), and show
+// a broken little rectangle ("tofu") instead. That looks broken and is
+// exactly what was reported. Instead of hoping every glyph is supported, we
+// test each one once by drawing it on a hidden canvas and comparing it to a
+// glyph we know is missing - if they match, the real glyph isn't supported
+// either, so we swap in a safe fallback instead of ever showing a rectangle.
+const _emojiCache = {};
+let _emojiRefData = null;
+function _emojiCanvas(){
+  if(!_emojiCanvas._c){
+    const c = document.createElement('canvas');
+    c.width = 36; c.height = 36;
+    _emojiCanvas._c = c;
+    _emojiCanvas._ctx = c.getContext('2d', {willReadFrequently:true});
+  }
+  return _emojiCanvas._ctx;
+}
+function _drawGlyph(ctx, ch){
+  ctx.clearRect(0,0,36,36);
+  ctx.font = '26px sans-serif';
+  ctx.textBaseline = 'top';
+  ctx.fillText(ch, 0, 0);
+  return ctx.getImageData(0,0,36,36).data;
+}
+function emojiSupported(ch){
+  if(!ch) return false;
+  if(ch in _emojiCache) return _emojiCache[ch];
+  try{
+    const ctx = _emojiCanvas();
+    if(_emojiRefData === null){
+      // U+FFFE is guaranteed never assigned, so this is always the "broken" glyph.
+      _emojiRefData = _drawGlyph(ctx, '￾');
+    }
+    const data = _drawGlyph(ctx, ch);
+    let same = true;
+    for(let i=0;i<data.length;i+=37){ // sample, full compare is overkill
+      if(data[i] !== _emojiRefData[i]){ same = false; break; }
+    }
+    const supported = !same;
+    _emojiCache[ch] = supported;
+    return supported;
+  }catch(e){
+    return true; // if we can't test, don't hide content over it
+  }
+}
+// Returns ch if it looks safe to render, otherwise the fallback (default: '').
+function safeEmoji(ch, fallback){
+  if(fallback === undefined) fallback = '';
+  if(!ch) return fallback;
+  // Strings like "🍎🍎🍎" (repeated emoji) or math text ("2 + 3 =") - test
+  // the first symbol-like character only; plain text always passes through.
+  const first = Array.from(ch)[0];
+  if(!/[\u{1F000}-\u{1FFFF}\u{2190}-\u{2BFF}\u{2600}-\u{27BF}]/u.test(first)) return ch;
+  return emojiSupported(first) ? ch : fallback;
+}
+
+function renderSlots(){
+  const slots = document.getElementById('slots');
+  slots.innerHTML = '';
+  slotAnswer.forEach(val=>{
+    const s = document.createElement('div');
+    s.className = 'slot' + (val ? ' filled' : '');
+    s.textContent = val || '';
+    slots.appendChild(s);
+  });
+}
+
+function renderTiles(){
+  const tilesEl = document.getElementById('tiles');
+  tilesEl.innerHTML = '';
+  currentTiles.forEach((t, idx)=>{
+    const b = document.createElement('button');
+    b.className = 'tile';
+    b.textContent = t;
+    b.onclick = ()=>placeTile(t, idx);
+    tilesEl.appendChild(b);
+  });
+}
+
+function placeTile(tile, tileIdx){
+  if(inputLocked || !hasHeard) return;
+  const nextSlot = slotAnswer.findIndex(v=>v===null);
+  if(nextSlot === -1) return;
+  slotAnswer[nextSlot] = tile;
+  currentTiles.splice(tileIdx,1);
+  renderSlots();
+  renderTiles();
+  if(slotAnswer.every(v=>v!==null)){
+    const built = slotAnswer.join('');
+    const item = currentItem;
+    if(built === item.w){
+      correctAnswer(item.w);
+    } else {
+      inputLocked = true;
+      wordAttemptsWrong += 1;
+      const fb = document.getElementById('feedback');
+      fb.textContent = 'Not quite, try again!';
+      fb.className = 'feedback retry';
+      const pause = wordAttemptsWrong >= 3 ? 1600 : 1100;
+      setTimeout(()=>{
+        currentTiles = shuffle([...item.tiles]);
+        slotAnswer = new Array(item.tiles.length).fill(null);
+        // after real repeated struggle, scaffold rather than let her keep guessing blindly forever
+        if(wordAttemptsWrong >= 3 && item.tiles.length > 1){
+          placeHintTile(item.tiles[0]);
+        }
+        if(wordAttemptsWrong >= 5 && item.tiles.length > 2){
+          placeHintTile(item.tiles[1]);
+        }
+        renderSlots(); renderTiles();
+        fb.textContent = '';
+        inputLocked = false;
+      }, pause);
+    }
+  }
+}
+
+function placeHintTile(tileVal){
+  const slotIdx = slotAnswer.findIndex(v=>v===null);
+  const poolIdx = currentTiles.indexOf(tileVal);
+  if(slotIdx === -1 || poolIdx === -1) return;
+  slotAnswer[slotIdx] = tileVal;
+  currentTiles.splice(poolIdx,1);
+}
+
+function checkChoice(chosen, correct, el){
+  if(inputLocked || !hasHeard) return;
+  inputLocked = true;
+  document.querySelectorAll('.mc-opt').forEach(o=>o.style.pointerEvents='none');
+  if(chosen === correct){
+    el.style.background = 'var(--mint)';
+    correctAnswer(correct);
+  } else {
+    wordAttemptsWrong += 1;
+    el.style.background = 'var(--pink)';
+    const fb = document.getElementById('feedback');
+    fb.textContent = 'Not quite, try again!';
+    fb.className = 'feedback retry';
+    const pause = wordAttemptsWrong >= 3 ? 1600 : 1100;
+    setTimeout(()=>{
+      el.style.background='';
+      fb.textContent='';
+      // after real repeated struggle, narrow it down rather than let her mash through options forever
+      if(wordAttemptsWrong === 3){
+        const remaining = Array.from(document.querySelectorAll('.mc-opt')).filter(o=>o.textContent !== correct && !o.classList.contains('eliminated'));
+        if(remaining.length > 1) remaining[0].classList.add('eliminated');
+      }
+      document.querySelectorAll('.mc-opt').forEach(o=>{ if(!o.classList.contains('eliminated')) o.style.pointerEvents='auto'; });
+      inputLocked = false;
+    }, pause);
+  }
+}
+
+function correctAnswer(word){
+  const fb = document.getElementById('feedback');
+  let msg = 'Yes! Great work!';
+  state.stars += 1;
+  state.wordsBuilt += 1;
+  levelCorrect += 1;
+
+  // gentle mystery chest, roughly one in three correct answers
+  if(Math.random() < 0.33){
+    const bonus = 1 + Math.floor(Math.random()*3);
+    state.coins += bonus;
+    msg += ' 🎁 Mystery chest: +' + bonus + ' coins!';
+  }
+
+  ensureDailyQuest();
+  if(!state.dailyQuest.done){
+    state.dailyQuest.progress += 1;
+    if(state.dailyQuest.progress >= state.dailyQuest.target){
+      state.dailyQuest.done = true;
+      if(!state.dailyQuest.rewardGiven){
+        state.coins += 15;
+        state.dailyQuest.rewardGiven = true;
+        msg += ' Daily quest complete, +15 coins!';
+      }
+    }
+  }
+
+  fb.textContent = msg;
+  fb.className = 'feedback good';
+  speak(word);
+  saveState();
+  updateTopBadges();
+  setTimeout(()=>{
+    wordIndex += 1;
+    if(wordIndex >= currentLevel.words.length){
+      if(isReviewMode){ finishReview(); } else { finishLevel(); }
+    } else {
+      renderWord();
+    }
+  }, 1200);
+}
+
+function finishLevel(){
+  const wasAlreadyDone = !!state.zoneProgress[currentZone.id][currentLevel.id];
+  state.zoneProgress[currentZone.id][currentLevel.id] = true;
+  const sticker = stickerForLevel(currentZone, currentLevel);
+  if(!state.stickers.includes(sticker)) state.stickers.push(sticker);
+
+  const doneCount = ZONES.reduce((sum,z)=>sum + Object.values(state.zoneProgress[z.id]).filter(Boolean).length, 0);
+  state.islandItems = ISLAND_DECOR.slice(0, doneCount);
+
+  const justUnlockedGoal = !wasAlreadyDone ? BIG_GOALS.find(g=>g.milestone === doneCount) : null;
+
+  // Personal-best pace, tracked silently in the background - never a running
+  // clock or countdown during play, just a nice surprise afterwards if she
+  // replays a level and beats her own past time. Never shown as a fail.
+  const elapsedSec = Math.round((Date.now() - levelStartTime) / 1000);
+  const bestKey = currentZone.id + ':' + currentLevel.id;
+  const prevBest = state.bestTimes[bestKey];
+  let beatBest = false;
+  if(prevBest === undefined || elapsedSec < prevBest){
+    state.bestTimes[bestKey] = elapsedSec;
+    beatBest = wasAlreadyDone && prevBest !== undefined;
+  }
+
+  saveState();
+  if(justUnlockedGoal){
+    document.getElementById('summaryEmoji').textContent = safeEmoji(justUnlockedGoal.icon,'✦');
+    document.getElementById('summaryTitle').textContent = 'Big goal unlocked!';
+    document.getElementById('summarySub').textContent = 'You earned: ' + justUnlockedGoal.label + ' ' + justUnlockedGoal.desc + '! Show a grown-up this screen.';
+  } else {
+    document.getElementById('summaryEmoji').textContent = '🎉';
+    document.getElementById('summaryTitle').textContent = currentLevel.name + ' complete!';
+    document.getElementById('summarySub').textContent = 'You got ' + levelCorrect + ' right and added something new to your island.' +
+      (beatBest ? ' That\'s your fastest yet for this lesson! ⚡' : '');
+  }
+  show('screen-summary');
+}
+document.getElementById('summaryContinue').addEventListener('click', ()=>{ renderIsland(); show('screen-island'); });
+
+function renderDashboard(){
+  updateTopBadges();
+  const doneTotal = totalDoneCount();
+  const goalsList = document.getElementById('bigGoalsList');
+  goalsList.innerHTML = BIG_GOALS.map(g=>{
+    const reached = doneTotal >= g.milestone;
+    return '<div class="goal-row'+(reached?' unlocked':'')+'">' +
+      '<div class="goal-icon">'+safeEmoji(g.icon,'✦')+'</div>' +
+      '<div class="goal-info"><b>'+g.label+' '+g.desc+'</b>' +
+      '<span>'+(reached ? 'Unlocked! 🎉' : doneTotal+' of '+g.milestone+' lessons done')+'</span></div>' +
+      '</div>';
+  }).join('');
+  document.getElementById('dashStars').textContent = state.stars;
+  document.getElementById('dashCoins').textContent = state.coins;
+  document.getElementById('dashWords').textContent = state.wordsBuilt;
+  document.getElementById('streakLine').textContent = state.streak > 0
+    ? 'On a ' + state.streak + ' day play streak, keep it going!'
+    : 'Play today to start a streak!';
+
+  const week = document.getElementById('weekRow');
+  week.innerHTML = '';
+  const labels = ['M','T','W','T','F','S','S'];
+  for(let i=6;i>=0;i--){
+    const d = new Date(Date.now() - i*86400000);
+    const ds = d.toISOString().slice(0,10);
+    const played = state.playedDates.includes(ds);
+    const dayLabel = labels[(d.getDay()+6)%7];
+    const cell = document.createElement('div');
+    cell.className = 'week-day';
+    cell.innerHTML = '<div class="dot'+(played?' played':'')+'"></div><span>'+dayLabel+'</span>';
+    week.appendChild(cell);
+  }
+
+  const zonesEl = document.getElementById('dashZones');
+  zonesEl.innerHTML = '<h2>Zones</h2>';
+  ZONES.forEach(zone=>{
+    const prog = state.zoneProgress[zone.id];
+    const doneCount = Object.values(prog).filter(Boolean).length;
+    zonesEl.innerHTML += '<p class="sub" style="margin-bottom:6px;font-weight:700;color:var(--text);">'+safeEmoji(zone.icon,'✦')+' '+zone.name+' - '+doneCount+'/'+zone.levels.length+'</p>';
+    zone.levels.forEach(lvl=>{
+      const done = prog[lvl.id];
+      zonesEl.innerHTML +=
+        '<div style="margin-bottom:10px;">' +
+        '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:4px;"><span>'+lvl.name+'</span><span>'+(done?'Complete':'Not yet')+'</span></div>' +
+        '<div class="progressbar" style="margin-bottom:0;"><div style="width:'+(done?100:0)+'%;background:'+lvl.color+'"></div></div>' +
+        '</div>';
+    });
+  });
+
+  const stickerEl = document.getElementById('dashStickers');
+  const note = document.getElementById('dashStickerNote');
+  if(state.stickers.length === 0){
+    note.textContent = 'Finish a level to earn your first sticker. Collect ' + TOTAL_LEVELS + ' in total, one for every level in every zone.';
+    stickerEl.innerHTML = '';
+  } else if(state.stickers.length >= TOTAL_LEVELS){
+    note.textContent = '🏆 Full collection! All ' + TOTAL_LEVELS + ' stickers collected, you finished every level!';
+    stickerEl.innerHTML = state.stickers.map(s=>'<span class="sticker">'+safeEmoji(s,'✦')+'</span>').join('');
+  } else {
+    note.textContent = state.stickers.length + ' of ' + TOTAL_LEVELS + ' stickers collected. Finish more levels to complete the set.';
+    stickerEl.innerHTML = state.stickers.map(s=>'<span class="sticker">'+safeEmoji(s,'✦')+'</span>').join('');
+  }
+}
+
+const hasExistingSave = !!localStorage.getItem('soundStudioState');
+applyTheme();
+applyAccentColor();
+renderBrand();
+initCanvas();
+renderDrawColors();
+const defaultBrushBtn = document.querySelector('.brush-btn[data-size="9"]');
+if(defaultBrushBtn) defaultBrushBtn.classList.add('sel');
+if(hasExistingSave){
+  updateStreak();
+  renderStreakBadge();
+  renderIsland();
+  show('screen-island');
+} else {
+  renderSetup();
+  show('screen-setup');
+}
+</script>
+</body>
+</html>
